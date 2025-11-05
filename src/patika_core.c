@@ -1,24 +1,26 @@
-/* Patika Core - Main Entry Point
- * Lifecycle management and public API implementation
- */
+/* Patika Core - Main Entry Point */
 
 #include "../include/patika_core.h"
-
+#include "../include/patika_log.h"
+#include "internal/patika_internal.h"
 #include <stdlib.h>
 #include <string.h>
 
-#include "internal/patika_internal.h"
+PATIKA_API PatikaHandle patika_create(const PatikaConfig *config)
+{
+    if (!config)
+        return NULL;
+    PATIKA_LOG_INFO("Creating patika context %u agents %ux%u map",
+                    config->max_agents,
+                    config->grid_width,
+                    config->grid_height);
 
-/* ============================================================================
- *  PUBLIC API: LIFECYCLE
- * ============================================================================
- */
-
-PATIKA_API PatikaHandle patika_create(const PatikaConfig* config) {
-    if (!config) return NULL;
-
-    struct PatikaContext* ctx = calloc(1, sizeof(struct PatikaContext));
-    if (!ctx) return NULL;
+    struct PatikaContext *ctx = calloc(1, sizeof(struct PatikaContext));
+    if (!ctx)
+    {
+        PATIKA_LOG_ERROR("Failed to allocate context");
+        return NULL;
+    }
 
     ctx->config = *config;
 
@@ -31,14 +33,10 @@ PATIKA_API PatikaHandle patika_create(const PatikaConfig* config) {
     pcg32_init(&ctx->rng, config->rng_seed);
 
     // Allocate snapshot buffers
-    ctx->snapshots[0].agents =
-        calloc(config->max_agents, sizeof(AgentSnapshot));
-    ctx->snapshots[1].agents =
-        calloc(config->max_agents, sizeof(AgentSnapshot));
-    ctx->snapshots[0].barracks =
-        calloc(config->max_barracks, sizeof(BarrackSnapshot));
-    ctx->snapshots[1].barracks =
-        calloc(config->max_barracks, sizeof(BarrackSnapshot));
+    ctx->snapshots[0].agents = calloc(config->max_agents, sizeof(AgentSnapshot));
+    ctx->snapshots[1].agents = calloc(config->max_agents, sizeof(AgentSnapshot));
+    ctx->snapshots[0].barracks = calloc(config->max_barracks, sizeof(BarrackSnapshot));
+    ctx->snapshots[1].barracks = calloc(config->max_barracks, sizeof(BarrackSnapshot));
 
     atomic_init(&ctx->snapshot_index, 0);
     atomic_init(&ctx->version, 0);
@@ -48,8 +46,10 @@ PATIKA_API PatikaHandle patika_create(const PatikaConfig* config) {
     return ctx;
 }
 
-PATIKA_API void patika_destroy(PatikaHandle handle) {
-    if (!handle) return;
+PATIKA_API void patika_destroy(PatikaHandle handle)
+{
+    if (!handle)
+        return;
 
     mpsc_destroy(&handle->cmd_queue);
     spsc_destroy(&handle->event_queue);
@@ -65,32 +65,133 @@ PATIKA_API void patika_destroy(PatikaHandle handle) {
     free(handle);
 }
 
-PATIKA_API PatikaError patika_load_map(PatikaHandle handle,
-                                       const uint8_t* map_states,
-                                       uint32_t width, uint32_t height) {
-    if (!handle) return PATIKA_ERR_NULL_HANDLE;
-    if (!map_states) return PATIKA_ERR_NULL_HANDLE;
+PATIKA_API PatikaError patika_load_map(PatikaHandle handle, const uint8_t *map_states, uint32_t width, uint32_t height)
+{
+    if (!handle)
+        return PATIKA_ERR_NULL_HANDLE;
+    if (!map_states)
+        return PATIKA_ERR_NULL_HANDLE;
 
-    for (uint32_t i = 0; i < width * height; i++) {
+    for (uint32_t i = 0; i < width * height; i++)
+    {
         handle->map.tiles[i].state = map_states[i];
     }
 
     return PATIKA_OK;
 }
 
-/* ============================================================================
- *  PUBLIC API: COMMAND SUBMISSION
- * ============================================================================
- */
+PATIKA_API PatikaError patika_submit_command(PatikaHandle handle, const PatikaCommand *cmd)
+{
+    if (!handle)
+        return PATIKA_ERR_NULL_HANDLE;
+    return mpsc_push(&handle->cmd_queue, cmd) == 0 ? PATIKA_OK : PATIKA_ERR_QUEUE_FULL;
+}
 
-PATIKA_API PatikaError patika_submit_command(PatikaHandle handle,
-                                             const PatikaCommand* cmds,
-                                             uint32_t count) {
-    if (!handle) return PATIKA_ERR_NULL_HANDLE;
-    for (uint32_t i = 0; i < count; i++) {
-        if (mpsc_push(&handle->cmd_queue, &cmds[i] != 0)) {
+PATIKA_API PatikaError patika_submit_commands(PatikaHandle handle, const PatikaCommand *cmds, uint32_t count)
+{
+    if (!handle)
+        return PATIKA_ERR_NULL_HANDLE;
+
+    for (uint32_t i = 0; i < count; i++)
+    {
+        if (mpsc_push(&handle->cmd_queue, &cmds[i]) != 0)
+        {
             return PATIKA_ERR_QUEUE_FULL;
         }
     }
     return PATIKA_OK;
+}
+
+PATIKA_API void patika_tick(PatikaHandle handle)
+{
+    if (!handle)
+        return;
+
+    // 1. Process all pending commands
+    PatikaCommand cmd;
+    while (mpsc_pop(&handle->cmd_queue, &cmd) == 0)
+    { // 0 = success
+        process_command(handle, &cmd);
+    }
+
+    // 2. Update all agents needing calculation
+    for (uint32_t i = 0; i < handle->agents.capacity; i++)
+    {
+        AgentSlot *agent = &handle->agents.slots[i];
+        if (!agent->active)
+            continue;
+
+        if (agent->state == 1)
+        { // WAITING_FOR_CALC
+            compute_next_step(handle, agent);
+        }
+    }
+
+    // 3. Update snapshot
+    update_snapshot(handle);
+
+    handle->stats.total_ticks++;
+    handle->stats.active_agents = handle->agents.active_count;
+}
+
+PATIKA_API uint32_t patika_poll_events(PatikaHandle handle, PatikaEvent *out_events, uint32_t max_events)
+{
+    if (!handle)
+        return 0;
+
+    uint32_t count = 0;
+    while (count < max_events && spsc_pop(&handle->event_queue, &out_events[count]) == 0)
+    {
+        count++; // 0 = success, continue reading
+    }
+
+    handle->stats.events_emitted += count;
+    return count;
+}
+
+PATIKA_API const PatikaSnapshot *patika_get_snapshot(PatikaHandle handle)
+{
+    if (!handle)
+        return NULL;
+
+    uint32_t idx = atomic_load(&handle->snapshot_index);
+    return &handle->snapshots[idx];
+}
+
+PATIKA_API PatikaStats patika_get_stats(PatikaHandle handle)
+{
+    if (!handle)
+    {
+        PatikaStats empty = {0};
+        return empty;
+    }
+    return handle->stats;
+}
+
+/* ============================================================================
+ *  PUBLIC API: CONVENIENCE HELPERS
+ * ============================================================================
+ */
+
+PATIKA_API PatikaError patika_add_agent_sync(PatikaHandle handle,
+                                             int32_t start_q,
+                                             int32_t start_r,
+                                             uint8_t faction,
+                                             uint8_t side,
+                                             BarrackID parent_barrack,
+                                             AgentID *id_output)
+{
+    if (!handle)
+        return PATIKA_ERR_NULL_HANDLE;
+
+    PatikaCommand cmd = {0};
+    cmd.type = CMD_ADD_AGENT;
+    cmd.add_agent.start_q = start_q;
+    cmd.add_agent.start_r = start_r;
+    cmd.add_agent.faction = faction;
+    cmd.add_agent.side = side;
+    cmd.add_agent.parent_barrack = parent_barrack;
+    cmd.add_agent.out_agent_id = id_output;
+
+    return patika_submit_command(handle, &cmd);
 }
