@@ -110,11 +110,10 @@ PATIKA_API void patika_tick(PatikaHandle handle)
     // 1. Process all pending commands
     PatikaCommand cmd;
     while (mpsc_pop(&handle->cmd_queue, &cmd) == 0)
-    { // 0 = success
+    {
         process_command(handle, &cmd);
     }
 
-    // 2. Update all agents needing calculation
     for (uint32_t i = 0; i < handle->agents.capacity; i++)
     {
         AgentSlot *agent = &handle->agents.slots[i];
@@ -127,7 +126,6 @@ PATIKA_API void patika_tick(PatikaHandle handle)
         }
     }
 
-    // 3. Update snapshot
     update_snapshot(handle);
 
     handle->stats.total_ticks++;
@@ -142,7 +140,7 @@ PATIKA_API uint32_t patika_poll_events(PatikaHandle handle, PatikaEvent *out_eve
     uint32_t count = 0;
     while (count < max_events && spsc_pop(&handle->event_queue, &out_events[count]) == 0)
     {
-        count++; // 0 = success, continue reading
+        count++;
     }
 
     handle->stats.events_emitted += count;

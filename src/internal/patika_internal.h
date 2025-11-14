@@ -1,20 +1,8 @@
-/*
- * Author: Oguzhan Akyuz
- * Created: 28-10-2025
- * Mail:   pytgion@gmail.com
- *
- * Updated: 28-10-2025
- */
-
-/* Patika Internal Header
- * Shared types and function declarations across implementation files
- * DO NOT INCLUDE IN PUBLIC API
- */
-
 #ifndef PATIKA_INTERNAL_H
 #define PATIKA_INTERNAL_H
 
 #include "../../include/patika_core.h"
+#include "../../include/patika_log.h"
 #include <stdatomic.h>
 #include <stdint.h>
 
@@ -27,10 +15,6 @@
 #define PATIKA_INTERNAL_LOG_WARN(fmt, ...) PATIKA_LOG_WARN("[CORE] " fmt, ##__VA_ARGS__)
 #define PATIKA_INTERNAL_LOG_ERROR(fmt, ...) PATIKA_LOG_ERROR("[CORE] " fmt, ##__VA_ARGS__)
 
-/* ============================================================================
- *  FORWARD DECLARATIONS
- * ============================================================================
- */
 typedef struct MPSCCommandQueue MPSCCommandQueue;
 typedef struct SPSCEventQueue SPSCEventQueue;
 typedef struct AgentSlot AgentSlot;
@@ -41,10 +25,6 @@ typedef struct MapTile MapTile;
 typedef struct MapGrid MapGrid;
 typedef struct PCG32 PCG32;
 
-/* ============================================================================
- *  MPSC COMMAND QUEUE
- * ============================================================================
- */
 struct MPSCCommandQueue
 {
     PatikaCommand *buffer;
@@ -58,10 +38,6 @@ void mpsc_destroy(MPSCCommandQueue *q);
 int mpsc_push(MPSCCommandQueue *q, const PatikaCommand *cmd);
 int mpsc_pop(MPSCCommandQueue *q, PatikaCommand *out);
 
-/* ============================================================================
- *  SPSC EVENT QUEUE
- * ============================================================================
- */
 struct SPSCEventQueue
 {
     PatikaEvent *buffer;
@@ -75,10 +51,6 @@ void spsc_destroy(SPSCEventQueue *q);
 int spsc_push(SPSCEventQueue *q, const PatikaEvent *evt);
 int spsc_pop(SPSCEventQueue *q, PatikaEvent *out);
 
-/* ============================================================================
- *  AGENT POOL
- * ============================================================================
- */
 struct AgentSlot
 {
     AgentID id;
@@ -123,10 +95,6 @@ static inline uint16_t agent_generation(AgentID id)
     return id >> 16;
 }
 
-/* ============================================================================
- *  BARRACK POOL
- * ============================================================================
- */
 struct BarrackSlot
 {
     BarrackID id;
@@ -150,12 +118,9 @@ struct BarrackPool
 
 void barrack_pool_init(BarrackPool *pool, uint16_t capacity);
 void barrack_pool_destroy(BarrackPool *pool);
+BarrackID barrack_pool_allocate(BarrackPool *pool);
 BarrackSlot *barrack_pool_get(BarrackPool *pool, BarrackID id);
 
-/* ============================================================================
- *  MAP GRID
- * ============================================================================
- */
 struct MapTile
 {
     uint8_t state;
@@ -173,11 +138,8 @@ void map_init(MapGrid *map, uint32_t width, uint32_t height);
 void map_destroy(MapGrid *map);
 int map_in_bounds(MapGrid *map, int32_t q, int32_t r);
 MapTile *map_get(MapGrid *map, int32_t q, int32_t r);
+void map_set_tile_state(MapGrid *map, int32_t q, int32_t r, uint8_t state);
 
-/* ============================================================================
- *  RNG (PCG32)
- * ============================================================================
- */
 struct PCG32
 {
     uint64_t state;
@@ -186,10 +148,6 @@ struct PCG32
 void pcg32_init(PCG32 *rng, uint64_t seed);
 uint32_t pcg32_next(PCG32 *rng);
 
-/* ============================================================================
- *  MAIN CONTEXT (opaque to public API)
- * ============================================================================
- */
 struct PatikaContext
 {
     PatikaConfig config;
@@ -205,22 +163,10 @@ struct PatikaContext
     PatikaStats stats;
 };
 
-/* ============================================================================
- *  COMMAND PROCESSING
- * ============================================================================
- */
 void process_command(struct PatikaContext *ctx, const PatikaCommand *cmd);
 
-/* ============================================================================
- *  PATHFINDING
- * ============================================================================
- */
 void compute_next_step(struct PatikaContext *ctx, AgentSlot *agent);
 
-/* ============================================================================
- *  SNAPSHOT
- * ============================================================================
- */
 void update_snapshot(struct PatikaContext *ctx);
 
-#endif /* PATIKA_INTERNAL_H */
+#endif

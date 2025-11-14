@@ -34,6 +34,16 @@ void agent_pool_init(AgentPool *pool, uint32_t capacity)
     pool->slots[capacity - 1].next_free_index = PATIKA_INVALID_AGENT_ID;
 }
 
+BarrackID barrack_pool_allocate(BarrackPool *pool)
+{
+    if (pool->next_id >= pool->capacity)
+        return PATIKA_INVALID_BARRACK_ID;
+    BarrackID id = pool->next_id;
+    pool->slots[id].active = 1;
+    pool->next_id++;
+    return id;
+}
+
 void agent_pool_destroy(AgentPool *pool)
 {
     if (pool)

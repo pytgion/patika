@@ -1,8 +1,3 @@
-/*
- * Patika Logging System - Implementation
- * Thread-safe logging with mutex protection
- */
-
 #include "patika_log.h"
 #include <stdarg.h>
 #include <stdio.h>
@@ -49,11 +44,6 @@ static PatikaLogState g_log_state = {.file = NULL,
                                      .timestamps_enabled = 1,
                                      .initialized = 0};
 
-/* ============================================================================
- *  UTILITY FUNCTIONS
- * ============================================================================
- */
-
 static void get_timestamp(char *buf, size_t size) {
   time_t now = time(NULL);
   struct tm *tm_info = localtime(&now);
@@ -74,11 +64,6 @@ const char *patika_log_level_str(PatikaLogLevel level) {
     return "UNKNOWN";
   }
 }
-
-/* ============================================================================
- *  PUBLIC API IMPLEMENTATION
- * ============================================================================
- */
 
 PATIKA_LOG_API int patika_log_init(void) {
   if (g_log_state.initialized) {
@@ -166,11 +151,6 @@ PATIKA_LOG_API void patika_log_set_timestamps(int enable) {
   g_log_state.timestamps_enabled = enable;
   PATIKA_MUTEX_UNLOCK(&g_log_state.mutex);
 }
-
-/* ============================================================================
- *  CORE LOGGING FUNCTION
- * ============================================================================
- */
 
 PATIKA_LOG_API void patika_log_write(PatikaLogLevel level, const char *file,
                                      int line, const char *fmt, ...) {

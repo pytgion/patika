@@ -44,8 +44,8 @@ extern "C"
 #define PATIKA_INVALID_BARRACK_ID 0xFFFF
 
     /**
- * @file patika_types.h
- * @brief Public types and data structures for the Patika core.
+ * @file patika_core.h
+ * @brief Public types and data structures, and the API end for the Patika lib.
  *
  * @details These types describe configuration, command/event payloads,
  * runtime snapshots, and the opaque handle used to operate the simulation.
@@ -312,4 +312,4 @@ extern "C"
 }
 #endif
 
-#endif // PATIKA_TYPES_H
+#endif
