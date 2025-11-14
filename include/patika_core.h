@@ -1,11 +1,3 @@
-/*
- * Author: Oguzhan Akyuz
- * Created: 28-10-2025
- * Mail:   pytgion@gmail.com
- *
- * Updated: 28-10-2025
- */
-
 #ifndef PATIKA_TYPES_H
 #define PATIKA_TYPES_H
 
