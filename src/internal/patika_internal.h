@@ -129,12 +129,13 @@ struct MapTile
 
 struct MapGrid
 {
+    GridType type;
     MapTile *tiles;
     uint32_t width;
     uint32_t height;
 };
 
-void map_init(MapGrid *map, uint32_t width, uint32_t height);
+void map_init(MapGrid *map, uint8_t type, uint32_t width, uint32_t height);
 void map_destroy(MapGrid *map);
 int map_in_bounds(MapGrid *map, int32_t q, int32_t r);
 MapTile *map_get(MapGrid *map, int32_t q, int32_t r);

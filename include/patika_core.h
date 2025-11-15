@@ -102,6 +102,18 @@ extern "C"
 
     /** @} */ /* end of PatikaEnums */
 
+    /**
+     * @brief Map type identifiers.
+     * @enum GridType
+     * @note Used in @ref PatikaConfig to select the map implementation.
+     * @note MAP_TYPE_RECTANGULAR is still generates hexagonal grid, only uses wiodth/height to generate diamond shaped map.
+     */
+    typedef enum
+    {
+        MAP_TYPE_HEXAGONAL = 0,  /**< Hexagonal grid map. */
+        MAP_TYPE_RECTANGULAR = 1 /**< Rectangular grid map (reserved). */
+    } GridType;
+
     /* -----------------------------------------------------------
  * 2. DATA STRUCTURES (PATIKA_STRUCTS GROUP)
  * ----------------------------------------------------------- */
@@ -117,6 +129,7 @@ extern "C"
  */
     typedef struct
     {
+        uint8_t grid_type;           /**< Map type identifier (implementation-defined). */
         uint32_t max_agents;         /**< Agent pool capacity. */
         uint16_t max_barracks;       /**< Barrack pool capacity. */
         uint32_t grid_width;         /**< Map width in cells (q axis). */
