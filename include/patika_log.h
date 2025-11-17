@@ -1,10 +1,3 @@
-/*
- * Patika Logging System - Public API
- * Thread-safe, file-based logging with callbacks
- * Author: Oguzhan Akyuz
- * Created: 2025-10-28
- */
-
 #ifndef PATIKA_LOG_H
 #define PATIKA_LOG_H
 
