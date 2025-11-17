@@ -32,8 +32,8 @@ extern "C"
     typedef uint32_t AgentID;
     typedef uint16_t BarrackID;
 
-#define PATIKA_INVALID_AGENT_ID 0xFFFF
-#define PATIKA_INVALID_BARRACK_ID 0xFFFF
+extern const uint32_t PATIKA_INVALID_AGENT_ID;
+extern const uint16_t PATIKA_INVALID_BARRACK_ID;
 
     /**
  * @file patika_core.h

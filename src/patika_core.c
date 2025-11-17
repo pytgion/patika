@@ -6,10 +6,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+const uint32_t PATIKA_INVALID_AGENT_ID = 0xFFFF;
+const uint16_t PATIKA_INVALID_BARRACK_ID = 0xFFFF;
+
+
 PATIKA_API PatikaHandle patika_create(const PatikaConfig *config)
 {
     if (!config)
+    {
         return NULL;
+    }
     PATIKA_LOG_INFO("Creating patika context %u agents %ux%u map",
                     config->max_agents,
                     config->grid_width,
@@ -29,7 +35,7 @@ PATIKA_API PatikaHandle patika_create(const PatikaConfig *config)
     spsc_init(&ctx->event_queue, config->event_queue_size);
     agent_pool_init(&ctx->agents, config->max_agents);
     barrack_pool_init(&ctx->barracks, config->max_barracks);
-    map_init(&ctx->map, config->grid_width, config->grid_height);
+    map_init(&ctx->map, config->grid_type, config->grid_width, config->grid_height);
     pcg32_init(&ctx->rng, config->rng_seed);
 
     // Allocate snapshot buffers
