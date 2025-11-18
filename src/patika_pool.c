@@ -27,6 +27,7 @@ void agent_pool_init(AgentPool *pool, uint32_t capacity)
     pool->slots = calloc(capacity, sizeof(AgentSlot));
     pool->capacity = capacity;
     pool->active_count = 0;
+    pool->free_head = 0;
     for (uint32_t i = 0; i < capacity - 1; i++)
     { // check for -2
         pool->slots[i].next_free_index = i + 1;
@@ -56,13 +57,16 @@ AgentID agent_pool_allocate(AgentPool *pool)
 {
     if (pool->active_count >= pool->capacity)
         return PATIKA_INVALID_AGENT_ID;
-    uint16_t index = pool->free_head;
-    if (index == 0xFFF) // cause why not
+    if (pool->free_head == PATIKA_INVALID_AGENT_ID)
         return PATIKA_INVALID_AGENT_ID;
+    uint16_t index = pool->free_head;
     pool->free_head = pool->slots[index].next_free_index;
     pool->slots[index].generation++;
     pool->slots[index].active = 1;
-    return make_agent_id(index, pool->slots[index].generation);
+    pool->active_count++;
+    AgentID id = make_agent_id(index, pool->slots[index].generation);
+    pool->slots[index].id = id;
+    return id;
 }
 
 void agent_pool_free(AgentPool *pool, AgentID id)
