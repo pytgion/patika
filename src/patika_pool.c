@@ -55,7 +55,7 @@ void agent_pool_destroy(AgentPool *pool)
 
 AgentID agent_pool_allocate(AgentPool *pool)
 {
-    if (pool->active_count >= pool->capacity)
+    if (pool->active_count >= PATIKA_INVALID_AGENT_INDEX)
         return PATIKA_INVALID_AGENT_ID;
     if (pool->free_head == PATIKA_INVALID_AGENT_ID)
         return PATIKA_INVALID_AGENT_ID;
