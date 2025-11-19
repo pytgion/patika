@@ -16,10 +16,7 @@ mkdir %BUILD_DIR%
 
 :: Configure
 cmake -B %BUILD_DIR% ^
-      -G "Visual Studio 17 2022" ^
       -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ^
-      -DPATIKA_BUILD_TESTS=ON ^
-      -DPATIKA_BUILD_EXAMPLES=ON
 
 if %ERRORLEVEL% neq 0 goto :error
 
