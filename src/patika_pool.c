@@ -7,6 +7,10 @@ void barrack_pool_init(BarrackPool *pool, uint16_t capacity)
     pool->slots = calloc(capacity, sizeof(BarrackSlot));
     pool->capacity = capacity;
     pool->next_id = 0;
+    for (uint16_t i = 0; i < capacity; i++)
+    {
+        pool->slots[i].active = 0;
+    }
 }
 
 void barrack_pool_destroy(BarrackPool *pool)
@@ -74,8 +78,8 @@ void agent_pool_free(AgentPool *pool, AgentID id)
     uint16_t index = agent_index(id);
     pool->slots[index].active = 0;
     pool->slots[index].next_free_index = pool->free_head;
-    pool->free_head = index;
     pool->active_count--;
+    pool->free_head = index;
 }
 
 AgentSlot *agent_pool_get(AgentPool *pool, AgentID id)

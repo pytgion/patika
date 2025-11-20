@@ -5,6 +5,8 @@ void update_snapshot(struct PatikaContext *ctx)
     uint32_t idx = (atomic_load(&ctx->snapshot_index) + 1) % 2;
     PatikaSnapshot *snap = &ctx->snapshots[idx];
 
+    uint32_t agent_count = 0;
+    uint16_t barrack_count = 0;
     snap->agent_count = ctx->agents.active_count;
     for (uint32_t i = 0; i < ctx->agents.capacity; i++)
     {
@@ -12,7 +14,7 @@ void update_snapshot(struct PatikaContext *ctx)
         if (!slot->active)
             continue;
 
-        AgentSnapshot *a = &snap->agents[snap->agent_count++];
+        AgentSnapshot *a = &snap->agents[agent_count++];
         a->id = slot->id;
         a->state = slot->state;
         a->faction = slot->faction;
@@ -31,7 +33,7 @@ void update_snapshot(struct PatikaContext *ctx)
         if (!slot->active)
             continue;
 
-        BarrackSnapshot *b = &snap->barracks[snap->barrack_count++];
+        BarrackSnapshot *b = &snap->barracks[barrack_count++];
         b->id = slot->id;
         b->state = slot->state;
         b->faction = slot->faction;

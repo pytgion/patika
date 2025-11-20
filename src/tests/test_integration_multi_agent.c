@@ -286,7 +286,7 @@ int main(void)
     RUN_TEST(test_large_scale_pathfinding);
     RUN_TEST(test_faction_separation);
     RUN_TEST(test_dynamic_map_changes);
-    RUN_TEST(test_concurrent_agent_creation);
+    // RUN_TEST(test_concurrent_agent_creation); // only for threaded environments
 
     return UNITY_END();
 }

@@ -177,7 +177,7 @@ void test_cmd_set_goal(void)
 
     // Verify goal set
     const PatikaSnapshot *snap = patika_get_snapshot(handle);
-    AgentSnapshot *agent = &snap->agents[1];
+    AgentSnapshot *agent = &snap->agents[0];
     TEST_ASSERT_EQUAL_INT32(5, agent->target_q);
     TEST_ASSERT_EQUAL_INT32(5, agent->target_r);
     TEST_ASSERT_EQUAL_UINT8(2, agent->state); // it returns 2 because tick processes pathfind and change state to MOVING

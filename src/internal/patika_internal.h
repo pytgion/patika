@@ -10,6 +10,8 @@
 #define INT32_MAX 0x7FFFFFFF
 #endif
 
+#define PATIKA_INVALID_AGENT_INDEX 0xFFFFu
+
 #define PATIKA_INTERNAL_LOG_DEBUG(fmt, ...) PATIKA_LOG_DEBUG("[CORE] " fmt, ##__VA_ARGS__)
 #define PATIKA_INTERNAL_LOG_INFO(fmt, ...) PATIKA_LOG_INFO("[CORE] " fmt, ##__VA_ARGS__)
 #define PATIKA_INTERNAL_LOG_WARN(fmt, ...) PATIKA_LOG_WARN("[CORE] " fmt, ##__VA_ARGS__)
@@ -163,7 +165,6 @@ struct PatikaContext
     PCG32 rng;
     PatikaStats stats;
 };
-
 void process_command(struct PatikaContext *ctx, const PatikaCommand *cmd);
 
 void compute_next_step(struct PatikaContext *ctx, AgentSlot *agent);

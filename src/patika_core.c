@@ -1,5 +1,3 @@
-/* Patika Core - Main Entry Point */
-
 #include "../include/patika_core.h"
 #include "../include/patika_log.h"
 #include "internal/patika_internal.h"
@@ -89,7 +87,9 @@ PATIKA_API PatikaError patika_load_map(PatikaHandle handle, const uint8_t *map_s
 PATIKA_API PatikaError patika_submit_command(PatikaHandle handle, const PatikaCommand *cmd)
 {
     if (!handle)
+    {
         return PATIKA_ERR_NULL_HANDLE;
+    }
     return mpsc_push(&handle->cmd_queue, cmd) == 0 ? PATIKA_OK : PATIKA_ERR_QUEUE_FULL;
 }
 
@@ -171,11 +171,6 @@ PATIKA_API PatikaStats patika_get_stats(PatikaHandle handle)
     }
     return handle->stats;
 }
-
-/* ============================================================================
- *  PUBLIC API: CONVENIENCE HELPERS
- * ============================================================================
- */
 
 PATIKA_API PatikaError patika_add_agent_sync(PatikaHandle handle,
                                              int32_t start_q,

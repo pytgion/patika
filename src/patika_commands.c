@@ -28,7 +28,7 @@ static void process_cmd_remove_agent(struct PatikaContext *ctx, const PatikaComm
     AgentSlot *agent = agent_pool_get(&ctx->agents, cmd->remove_agent.agent_id);
     if (!agent)
     {
-        PATIKA_INTERNAL_LOG_ERROR("Invalid agent ID for removal: %u", cmd->remove_agent.agent_id);
+        //    PATIKA_INTERNAL_LOG_ERROR("Invalid agent ID for removal: %u", cmd->remove_agent.agent_id);
         return;
     }
     agent_pool_free(&ctx->agents, cmd->remove_agent.agent_id);
@@ -38,7 +38,10 @@ static void process_cmd_set_goal(struct PatikaContext *ctx, const PatikaCommand 
 {
     AgentSlot *agent = agent_pool_get(&ctx->agents, cmd->set_goal.agent_id);
     if (!agent)
+    {
+        PATIKA_INTERNAL_LOG_ERROR("Invalid agent ID for set goal: %u", cmd->set_goal.agent_id);
         return;
+    }
 
     agent->target_q = cmd->set_goal.goal_q;
     agent->target_r = cmd->set_goal.goal_r;
@@ -96,8 +99,8 @@ void process_command(struct PatikaContext *ctx, const PatikaCommand *cmd)
     case CMD_COMPUTE_NEXT:
         PATIKA_LOG_WARN("CMD_COMPUTE_NEXT not implemented yet");
         break;
-    case CMD_BATCH_COMPUTE_NEXT:
-        PATIKA_LOG_WARN("CMD_BATCH_COMPUTE_NEXT not implemented yet");
+    case CMD_ADD_BUILDING:
+        PATIKA_LOG_WARN("CMD_ADD_BUILDING not implemented yet");
         break;
     default:
         PATIKA_INTERNAL_LOG_ERROR("Unhandled command type: %d", cmd->type);

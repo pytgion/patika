@@ -16,7 +16,7 @@ void setUp(void)
                            .max_barracks = 100,
                            .grid_width = 25,
                            .grid_height = 25,
-                           .command_queue_size = 512,
+                           .command_queue_size = 1024,
                            .event_queue_size = 512,
                            .rng_seed = 987654321};
     handle = patika_create(&config);
@@ -305,7 +305,7 @@ void test_sustained_maximum_load(void)
 
     PatikaStats stats = patika_get_stats(handle);
     TEST_ASSERT_EQUAL_UINT64(100, stats.total_ticks);
-    TEST_ASSERT_EQUAL_UINT32(1000, stats.active_agents);
+    TEST_ASSERT_EQUAL_UINT32(1000, stats.active_agents); // returns always less than max command queue size
 }
 
 int main(void)
@@ -316,7 +316,7 @@ int main(void)
     RUN_TEST(test_agent_creation_after_removal);
     RUN_TEST(test_rapid_create_destroy_cycle);
     RUN_TEST(test_generation_overflow_resilience);
-    RUN_TEST(test_max_barrack_capacity);
+    RUN_TEST(test_max_barrack_capacity); // shit happens here
     RUN_TEST(test_agents_per_barrack_limit);
     RUN_TEST(test_large_map_coverage);
     RUN_TEST(test_pathfinding_on_populated_map);
