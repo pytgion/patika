@@ -2,6 +2,7 @@
 
 A lock-free agent simulation engine used in project Germ Storm. Manages large-scale agent movement with pathfinding, handles commands from multiple threads, and streams events in real-time. Written in C11.
 
+Patika solves the problem of high CPU load and concurrency issues when managing tens of thousands of moving agents in real-time simulations (like crowd management or multiplayer queries). It achieves this efficiency by treating agents not as heavy, individual objects, but as simple data references, enabling grand-scale operations without the overhead of traditional locking mechanisms.
 
 ## Usage
 
