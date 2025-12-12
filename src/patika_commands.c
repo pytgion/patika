@@ -4,18 +4,24 @@ static void process_cmd_add_agent(struct PatikaContext *ctx, const PatikaCommand
 {
     AgentID id = agent_pool_allocate(&ctx->agents);
     if (id == PATIKA_INVALID_AGENT_ID)
+    {
+        PATIKA_INTERNAL_LOG_ERROR("AGENT POOL ALLOCATE FAILED");
         return;
+    }
 
     AgentSlot *agent = agent_pool_get(&ctx->agents, id);
     if (!agent)
+    {
+        PATIKA_INTERNAL_LOG_ERROR("AGENT SLOT IS FAILED TO INITIALIZE");
         return;
+    }
 
     agent->pos_q = cmd->add_agent.start_q;
     agent->pos_r = cmd->add_agent.start_r;
     agent->faction = cmd->add_agent.faction;
     agent->side = cmd->add_agent.side;
     agent->parent_barrack = cmd->add_agent.parent_barrack;
-    agent->state = 0;
+    agent->state = AGENT_WAITING_FOR_CALC; // waiting for calc
 
     if (cmd->add_agent.out_agent_id)
     {
@@ -23,12 +29,13 @@ static void process_cmd_add_agent(struct PatikaContext *ctx, const PatikaCommand
     }
 }
 
+
 static void process_cmd_remove_agent(struct PatikaContext *ctx, const PatikaCommand *cmd)
 {
     AgentSlot *agent = agent_pool_get(&ctx->agents, cmd->remove_agent.agent_id);
     if (!agent)
     {
-        //    PATIKA_INTERNAL_LOG_ERROR("Invalid agent ID for removal: %u", cmd->remove_agent.agent_id);
+        PATIKA_INTERNAL_LOG_ERROR("Invalid agent ID for removal: %u", cmd->remove_agent.agent_id);
         return;
     }
     agent_pool_free(&ctx->agents, cmd->remove_agent.agent_id);
@@ -45,7 +52,7 @@ static void process_cmd_set_goal(struct PatikaContext *ctx, const PatikaCommand 
 
     agent->target_q = cmd->set_goal.goal_q;
     agent->target_r = cmd->set_goal.goal_r;
-    agent->state = 1; // WAITING_FOR_CALC
+    agent->state = AGENT_WAITING_FOR_CALC; // WAITING_FOR_CALC
 }
 
 static void process_cmd_add_barrack(struct PatikaContext *ctx, const PatikaCommand *cmd)
