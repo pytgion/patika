@@ -126,7 +126,7 @@ PATIKA_API void patika_tick(PatikaHandle handle)
         if (!agent->active)
             continue;
 
-        if (agent->state == 1)
+        if (agent->state == AGENT_WAITING_FOR_CALC)
         { // WAITING_FOR_CALC
             compute_next_step(handle, agent);
         }
@@ -141,7 +141,9 @@ PATIKA_API void patika_tick(PatikaHandle handle)
 PATIKA_API uint32_t patika_poll_events(PatikaHandle handle, PatikaEvent *out_events, uint32_t max_events)
 {
     if (!handle)
+    {
         return 0;
+    }
 
     uint32_t count = 0;
     while (count < max_events && spsc_pop(&handle->event_queue, &out_events[count]) == 0)
