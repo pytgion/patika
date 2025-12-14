@@ -1,8 +1,8 @@
 #ifndef PATIKA_INTERNAL_H
 #define PATIKA_INTERNAL_H
 
-#include "../../include/patika_core.h"
-#include "../../include/patika_log.h"
+#include "../../include/patika.h"
+#include "../../include/patika/patika_log.h"
 #include <stdatomic.h>
 #include <stdint.h>
 
@@ -11,6 +11,7 @@
 #endif
 
 #define PATIKA_INVALID_AGENT_INDEX 0xFFFFu
+#define PATIKA_AGENT_DEFAULT_VIEW_RADIUS 1
 
 #define PATIKA_INTERNAL_LOG_DEBUG(fmt, ...) PATIKA_LOG_DEBUG("[CORE] " fmt, ##__VA_ARGS__)
 #define PATIKA_INTERNAL_LOG_INFO(fmt, ...) PATIKA_LOG_INFO("[CORE] " fmt, ##__VA_ARGS__)
@@ -53,20 +54,51 @@ void spsc_destroy(SPSCEventQueue *q);
 int spsc_push(SPSCEventQueue *q, const PatikaEvent *evt);
 int spsc_pop(SPSCEventQueue *q, PatikaEvent *out);
 
+typedef struct {
+    int32_t center_q, center_r;
+    int32_t radius;
+    int32_t current_target_q, current_target_r;
+    uint16_t waypoint_index;
+    float idle_timer;
+} PatrolData;
+
+typedef struct {
+    int32_t mode;
+    uint32_t cells_visited;
+    int32_t last_target_q, last_target_r;
+} ExploreData;
+
+typedef struct {
+    int32_t *guard_tiles_q;
+    int32_t *guard_tiles_r;
+    uint16_t tile_count;
+    uint16_t tile_capacity;
+} GuardData;
+
+// TODO: consider optimizing for cache friendly structure
 struct AgentSlot
 {
-    AgentID id;
-    uint16_t generation;
-    uint8_t active;
-    uint8_t state;
-    uint8_t faction;
-    uint8_t side;
-    BarrackID parent_barrack;
     int32_t pos_q, pos_r;
     int32_t next_q, next_r;
     int32_t target_q, target_r;
-    int32_t last_dir_q, last_dir_r;
+    AgentID id;
+    BuildingID parent_barrack;
+    AgentInteraction interaction_data;
+
+    uint16_t generation;
+    uint16_t progress; // 0-10000
+    uint16_t view_radius;
+    uint16_t speed; // tick based
     uint16_t next_free_index;
+
+    PatikaCollisionData collision_data;
+    uint8_t state;
+    uint8_t behavior;
+    uint8_t faction;
+    uint8_t side;
+    uint8_t active;
+
+    uint8_t explore_mode;
 };
 
 struct AgentPool
@@ -77,13 +109,14 @@ struct AgentPool
     uint32_t active_count;
 };
 
+
+
 void agent_pool_init(AgentPool *pool, uint32_t capacity);
 void agent_pool_destroy(AgentPool *pool);
 AgentID agent_pool_allocate(AgentPool *pool);
 void agent_pool_free(AgentPool *pool, AgentID id);
 AgentSlot *agent_pool_get(AgentPool *pool, AgentID id);
 
-/* ID Helper Functions */
 static inline AgentID make_agent_id(uint16_t index, uint16_t gen)
 {
     return ((uint32_t)gen << 16) | index;
@@ -99,11 +132,12 @@ static inline uint16_t agent_generation(AgentID id)
 
 struct BarrackSlot
 {
-    BarrackID id;
+    BuildingID id;
     uint8_t active;
     uint8_t faction;
     uint8_t side;
     uint8_t state;
+    AgentBehavior behavior;
     uint8_t patrol_radius;
     int32_t pos_q, pos_r;
     uint16_t max_agents;
@@ -120,13 +154,16 @@ struct BarrackPool
 
 void barrack_pool_init(BarrackPool *pool, uint16_t capacity);
 void barrack_pool_destroy(BarrackPool *pool);
-BarrackID barrack_pool_allocate(BarrackPool *pool);
-BarrackSlot *barrack_pool_get(BarrackPool *pool, BarrackID id);
+BuildingID barrack_pool_allocate(BarrackPool *pool);
+BarrackSlot *barrack_pool_get(BarrackPool *pool, BuildingID id);
 
 struct MapTile
 {
+    // TODO: implement sectorID
     uint8_t state;
     uint8_t occupancy;
+    uint8_t *sub_pos; // represents 8 equal partition of a hexagon, think twice before use it
+    uint16_t sectorID;
 };
 
 struct MapGrid
@@ -135,6 +172,7 @@ struct MapGrid
     MapTile *tiles;
     uint32_t width;
     uint32_t height;
+    AgentID *agent_grid;
 };
 
 void map_init(MapGrid *map, uint8_t type, uint32_t width, uint32_t height);
@@ -170,5 +208,7 @@ void process_command(struct PatikaContext *ctx, const PatikaCommand *cmd);
 void compute_next_step(struct PatikaContext *ctx, AgentSlot *agent);
 
 void update_snapshot(struct PatikaContext *ctx);
+
+void compute_patrol(struct PatikaContext *ctx, AgentSlot *agent);
 
 #endif

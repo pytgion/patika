@@ -33,7 +33,7 @@ typedef struct PatikaCommand
         } add_guard_tile;
 
         struct {
-            BarrackID barrack_id;
+            BuildingID barrack_id;
             int32_t tile_q, tile_r;
         } add_barrack_guard_tile;
 
@@ -44,7 +44,7 @@ typedef struct PatikaCommand
 
         struct {
             AgentID agent_id;
-            BarrackID barrack_id;
+            BuildingID barrack_id;
         } bind_barrack;
 
         struct {
@@ -52,7 +52,7 @@ typedef struct PatikaCommand
         } compute_next;
 
         struct {
-            BarrackID barrack_id;
+            BuildingID barrack_id;
         } clear_barrack_guard_tiles;
 
         struct {

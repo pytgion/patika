@@ -3,7 +3,7 @@
  * @brief Stress tests for capacity limits and memory management
  */
 
-#include "patika_core.h"
+#include "patika.h"
 #include "unity.h"
 #include <stdlib.h>
 
@@ -146,7 +146,7 @@ void test_generation_overflow_resilience(void)
 
 void test_max_barrack_capacity(void)
 {
-    BarrackID ids[100];
+    BuildingID ids[100];
     int created = 0;
 
     for (int i = 0; i < 100; i++)
@@ -175,7 +175,7 @@ void test_max_barrack_capacity(void)
 
 void test_agents_per_barrack_limit(void)
 {
-    BarrackID barrack_id;
+    BuildingID barrack_id;
 
     // Create barrack with capacity 20
     PatikaCommand cmd = {0};

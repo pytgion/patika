@@ -1,5 +1,4 @@
 #!/bin/bash
-# Patika C Library - Simple Build Script
 
 set -e
 

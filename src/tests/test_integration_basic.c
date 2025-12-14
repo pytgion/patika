@@ -3,7 +3,7 @@
  * @brief Basic integration tests for full simulation workflows
  */
 
-#include "patika_core.h"
+#include "patika.h"
 #include "unity.h"
 
 static PatikaHandle handle;
@@ -80,7 +80,7 @@ void test_agent_full_lifecycle(void)
 
 void test_barrack_agent_relationship(void)
 {
-    BarrackID barrack_id;
+    BuildingID barrack_id;
     AgentID agent_id;
 
     // Create barrack

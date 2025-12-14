@@ -27,7 +27,7 @@ void test_barrack_pool_init(void)
 
 void test_barrack_pool_allocate_single(void)
 {
-    BarrackID id = barrack_pool_allocate(&pool);
+    BuildingID id = barrack_pool_allocate(&pool);
 
     TEST_ASSERT_NOT_EQUAL(PATIKA_INVALID_BARRACK_ID, id);
     TEST_ASSERT_EQUAL_UINT16(0, id);
@@ -38,7 +38,7 @@ void test_barrack_pool_allocate_multiple(void)
 {
     for (uint16_t i = 0; i < 5; i++)
     {
-        BarrackID id = barrack_pool_allocate(&pool);
+        BuildingID id = barrack_pool_allocate(&pool);
         TEST_ASSERT_EQUAL_UINT16(i, id);
     }
 
@@ -50,18 +50,18 @@ void test_barrack_pool_allocate_capacity_exceeded(void)
     // Allocate all slots
     for (uint16_t i = 0; i < pool.capacity; i++)
     {
-        BarrackID id = barrack_pool_allocate(&pool);
+        BuildingID id = barrack_pool_allocate(&pool);
         TEST_ASSERT_NOT_EQUAL(PATIKA_INVALID_BARRACK_ID, id);
     }
 
     // Next allocation should fail
-    BarrackID id = barrack_pool_allocate(&pool);
+    BuildingID id = barrack_pool_allocate(&pool);
     TEST_ASSERT_EQUAL(PATIKA_INVALID_BARRACK_ID, id);
 }
 
 void test_barrack_pool_get_valid(void)
 {
-    BarrackID id = barrack_pool_allocate(&pool);
+    BuildingID id = barrack_pool_allocate(&pool);
     BarrackSlot *slot = barrack_pool_get(&pool, id);
 
     TEST_ASSERT_NOT_NULL(slot);
@@ -77,7 +77,7 @@ void test_barrack_pool_get_invalid_id(void)
 
 void test_barrack_pool_get_inactive_slot(void)
 {
-    BarrackID id = barrack_pool_allocate(&pool);
+    BuildingID id = barrack_pool_allocate(&pool);
     pool.slots[id].active = 0; // Manually deactivate
 
     BarrackSlot *slot = barrack_pool_get(&pool, id);
@@ -86,7 +86,7 @@ void test_barrack_pool_get_inactive_slot(void)
 
 void test_barrack_pool_sequential_allocation(void)
 {
-    BarrackID ids[3];
+    BuildingID ids[3];
 
     for (int i = 0; i < 3; i++)
     {

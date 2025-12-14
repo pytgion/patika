@@ -1,5 +1,5 @@
-#include "../include/patika_core.h"
-#include "../include/patika_log.h"
+#include "../include/patika.h"
+#include "../include/patika/patika_log.h"
 #include "internal/patika_internal.h"
 #include <stdlib.h>
 #include <string.h>
@@ -113,7 +113,7 @@ PATIKA_API void patika_tick(PatikaHandle handle)
     if (!handle)
         return;
 
-    // 1. Process all pending commands
+    // process all pending commands
     PatikaCommand cmd;
     while (mpsc_pop(&handle->cmd_queue, &cmd) == 0)
     {
@@ -124,9 +124,11 @@ PATIKA_API void patika_tick(PatikaHandle handle)
     {
         AgentSlot *agent = &handle->agents.slots[i];
         if (!agent->active)
+        {
             continue;
+        }
 
-        if (agent->state == AGENT_WAITING_FOR_CALC)
+        if (agent->state == STATE_CALCULATING)
         { // WAITING_FOR_CALC
             compute_next_step(handle, agent);
         }
@@ -174,25 +176,42 @@ PATIKA_API PatikaStats patika_get_stats(PatikaHandle handle)
     return handle->stats;
 }
 
+
 PATIKA_API PatikaError patika_add_agent_sync(PatikaHandle handle,
                                              int32_t start_q,
                                              int32_t start_r,
                                              uint8_t faction,
                                              uint8_t side,
-                                             BarrackID parent_barrack,
+                                             BuildingID parent_barrack,
                                              AgentID *id_output)
 {
     if (!handle)
         return PATIKA_ERR_NULL_HANDLE;
 
+    AddAgentPayload *payload = (AddAgentPayload*)malloc(sizeof(AddAgentPayload));
+    if (!payload)
+    {
+        return PATIKA_ERR_INVALID_COMMAND_TYPE;
+    }
+
+    payload->start_q = start_q;
+    payload->start_r = start_r;
+    payload->faction = faction;
+    payload->side = side;
+    payload->parent_barrack = parent_barrack;
+    payload->out_agent_id = id_output;
+
     PatikaCommand cmd = {0};
     cmd.type = CMD_ADD_AGENT;
-    cmd.add_agent.start_q = start_q;
-    cmd.add_agent.start_r = start_r;
-    cmd.add_agent.faction = faction;
-    cmd.add_agent.side = side;
-    cmd.add_agent.parent_barrack = parent_barrack;
-    cmd.add_agent.out_agent_id = id_output;
+    cmd.large_command.payload = payload;
 
-    return patika_submit_command(handle, &cmd);
+    PatikaError err = patika_submit_command(handle, &cmd);
+
+    // fucked up situation, evacuate the data
+    if (err != PATIKA_OK)
+    {
+        free(payload);
+    }
+
+    return err;
 }

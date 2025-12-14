@@ -69,8 +69,12 @@ install(TARGETS patika_core_c
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(DIRECTORY include/
+install(FILES include/patika.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(DIRECTORY include/patika/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/patika
     FILES_MATCHING PATTERN "*.h"
 )
 

@@ -13,7 +13,7 @@
 typedef struct {
     union {
         AgentID agent_id;
-        BarrackID barrack_id;
+        BuildingID barrack_id;
     } target;
 
     uint8_t is_barrack;  // 0 = agent, 1 = barrack

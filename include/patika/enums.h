@@ -138,6 +138,16 @@ extern "C" {
         STATE_REMOVE_QUEUE = 4
     } AgentState;
 
+    typedef enum
+    {
+        INTERACT_NONE = 0,
+        INTERACT_HEAL = 1,
+        INTERACT_TRAP = 2,
+        INTERACT_STICK = 3,
+        INTERACT_ATTACK = 4,
+        INTERACT_PATROL = 5
+    } InteractionType;
+
     // TODO: Exploration mode
     #ifdef __cplusplus
 }

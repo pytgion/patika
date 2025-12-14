@@ -18,7 +18,7 @@ void barrack_pool_destroy(BarrackPool *pool)
     free(pool->slots);
 }
 
-BarrackSlot *barrack_pool_get(BarrackPool *pool, BarrackID id)
+BarrackSlot *barrack_pool_get(BarrackPool *pool, BuildingID id)
 {
     if (id >= pool->capacity)
         return NULL;
@@ -39,15 +39,18 @@ void agent_pool_init(AgentPool *pool, uint32_t capacity)
     pool->slots[capacity - 1].next_free_index = PATIKA_INVALID_AGENT_ID;
 }
 
-BarrackID barrack_pool_allocate(BarrackPool *pool)
+BuildingID barrack_pool_allocate(BarrackPool *pool)
 {
     if (pool->next_id >= pool->capacity)
         return PATIKA_INVALID_BARRACK_ID;
-    BarrackID id = pool->next_id;
+    BuildingID id = pool->next_id;
     pool->slots[id].active = 1;
     pool->next_id++;
     return id;
 }
+
+
+/*============================Agent Pool Functions====================================*/
 
 void agent_pool_destroy(AgentPool *pool)
 {
@@ -60,9 +63,13 @@ void agent_pool_destroy(AgentPool *pool)
 AgentID agent_pool_allocate(AgentPool *pool)
 {
     if (pool->active_count >= PATIKA_INVALID_AGENT_INDEX)
+    {
         return PATIKA_INVALID_AGENT_ID;
+    }
     if (pool->free_head == PATIKA_INVALID_AGENT_ID)
+    {
         return PATIKA_INVALID_AGENT_ID;
+    }
     uint16_t index = pool->free_head;
     pool->free_head = pool->slots[index].next_free_index;
     pool->slots[index].generation++;

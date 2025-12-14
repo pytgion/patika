@@ -14,7 +14,7 @@ typedef struct {
     uint8_t behavior;
     uint8_t patrol_radius;
     uint16_t max_agents;
-    BarrackID *out_barrack_id;
+    BuildingID *out_barrack_id;
 } AddBarrackPayload;
 
 #endif

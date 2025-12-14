@@ -4,7 +4,7 @@
  */
 
 #include "internal/patika_internal.h"
-#include "patika_core.h"
+#include "patika.h"
 #include "unity.h"
 
 static PatikaHandle handle;

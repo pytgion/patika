@@ -4,7 +4,7 @@
  */
 
 #include "internal/patika_internal.h"
-#include "patika_core.h"
+#include "patika.h"
 #include "unity.h"
 
 static PatikaHandle handle;
@@ -189,7 +189,7 @@ void test_cmd_set_goal(void)
 
 void test_cmd_add_barrack(void)
 {
-    BarrackID id;
+    BuildingID id;
 
     PatikaCommand cmd = {0};
     cmd.type = CMD_ADD_BARRACK;

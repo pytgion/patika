@@ -3,7 +3,7 @@
  * @brief Stress tests for queue performance and thread safety
  */
 
-#include "patika_core.h"
+#include "patika.h"
 #include "unity.h"
 #include <pthread.h>
 #include <time.h>

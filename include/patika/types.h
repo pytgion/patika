@@ -37,10 +37,12 @@ extern "C" {
     typedef uint32_t AgentID;
 
     /** @brief Opaque barrack identifier */
-    typedef uint16_t BarrackID;
+    typedef uint16_t BuildingID;
 
     /** @brief Opaque simulation context handle */
     typedef struct PatikaContext *PatikaHandle;
+
+
 
     /* ============================================================================
      * Constants

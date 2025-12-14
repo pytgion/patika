@@ -19,7 +19,7 @@ extern "C" {
         AgentState state;
         uint8_t faction;
         uint8_t side;
-        BarrackID parent_barrack;
+        BuildingID parent_barrack;
         int32_t pos_q, pos_r;
         int32_t next_q, next_r;
         int32_t target_q, target_r;
@@ -30,7 +30,7 @@ extern "C" {
      */
     typedef struct
     {
-        BarrackID id;
+        BuildingID id;
         uint8_t faction;
         uint8_t side;
         uint8_t state;

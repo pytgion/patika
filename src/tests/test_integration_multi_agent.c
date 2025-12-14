@@ -3,7 +3,7 @@
  * @brief Integration tests for complex multi-agent scenarios
  */
 
-#include "patika_core.h"
+#include "patika.h"
 #include "unity.h"
 #include <pthread.h>
 #include <unistd.h>
@@ -69,7 +69,7 @@ void test_fifty_agents_different_goals(void)
 
 void test_multiple_barracks_with_agents(void)
 {
-    BarrackID barrack_ids[5];
+    BuildingID barrack_ids[5];
 
     // Create 5 barracks
     for (int i = 0; i < 5; i++)

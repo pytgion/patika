@@ -66,7 +66,7 @@ extern "C" {
         int32_t start_r,
         uint8_t faction,
         uint8_t side,
-        BarrackID parent_barrack,
+        BuildingID parent_barrack,
         AgentID *id_output
     );
 
