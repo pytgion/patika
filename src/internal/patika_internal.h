@@ -17,6 +17,8 @@
 #define AGENT_GRID_OCCUPIED_BIT  0x40000000  // Bit 30 (future use)
 #define AGENT_GRID_AGENT_MASK    0x0000FFFF  // Lower 16 bits
 
+#define AGENT_PROGRESS_MAX_DISTANCE 10000
+
 #define PATIKA_INTERNAL_LOG_DEBUG(fmt, ...) PATIKA_LOG_DEBUG("[CORE] " fmt, ##__VA_ARGS__)
 #define PATIKA_INTERNAL_LOG_INFO(fmt, ...) PATIKA_LOG_INFO("[CORE] " fmt, ##__VA_ARGS__)
 #define PATIKA_INTERNAL_LOG_WARN(fmt, ...) PATIKA_LOG_WARN("[CORE] " fmt, ##__VA_ARGS__)
@@ -241,6 +243,8 @@ int try_reserve_tile(struct PatikaContext *ctx, AgentSlot *agent, int32_t q, int
  * @brief Clear agent's reservation (used when agent cancels movement)
  */
 void clear_tile_reservation(MapGrid *map, int32_t q, int32_t r, AgentID agent_id);
+
+void process_movement(struct PatikaContext *ctx, AgentSlot *agent);
 
 
 struct PatikaContext

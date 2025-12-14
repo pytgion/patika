@@ -132,6 +132,10 @@ PATIKA_API void patika_tick(PatikaHandle handle)
         { // WAITING_FOR_CALC
             compute_next_step(handle, agent);
         }
+        else if (agent->state == STATE_MOVING)
+        {
+            process_movement(handle, agent);
+        }
     }
 
     update_snapshot(handle);

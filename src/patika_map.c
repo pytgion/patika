@@ -123,3 +123,4 @@ void map_set_agent_grid(MapGrid *map, int32_t q, int32_t r, uint32_t value)
         map->agent_grid[offset_r * map->width + offset_q] = value;
     }
 }
+

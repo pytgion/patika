@@ -14,6 +14,7 @@ add_library(patika_core_c SHARED
     src/patika_pool.c
     src/patika_map.c
     src/patika_collision.c
+    src/patika_movement.c
     src/patika_pathfinding.c
     src/patika_snapshot.c
     src/patika_rng.c
