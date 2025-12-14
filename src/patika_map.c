@@ -81,3 +81,45 @@ void map_set_tile_state(MapGrid *map, int32_t q, int32_t r, uint8_t state)
         tile->state = state;
     }
 }
+
+/**
+ * @brief Get agent_grid value at hex coordinates
+ */
+uint32_t map_get_agent_grid(MapGrid *map, int32_t q, int32_t r)
+{
+    if (!map_in_bounds(map, q, r))
+        return PATIKA_INVALID_AGENT_ID;
+
+    if (map->type == MAP_TYPE_RECTANGULAR)
+    {
+        return map->agent_grid[(r * map->width) + q];
+    }
+    else // MAP_TYPE_HEXAGONAL
+    {
+        int radius = (map->width - 1) / 2;
+        int offset_q = q + radius;
+        int offset_r = r + radius;
+        return map->agent_grid[offset_r * map->width + offset_q];
+    }
+}
+
+/**
+ * @brief Set agent_grid value at hex coordinates
+ */
+void map_set_agent_grid(MapGrid *map, int32_t q, int32_t r, uint32_t value)
+{
+    if (!map_in_bounds(map, q, r))
+        return;
+
+    if (map->type == MAP_TYPE_RECTANGULAR)
+    {
+        map->agent_grid[(r * map->width) + q] = value;
+    }
+    else // MAP_TYPE_HEXAGONAL
+    {
+        int radius = (map->width - 1) / 2;
+        int offset_q = q + radius;
+        int offset_r = r + radius;
+        map->agent_grid[offset_r * map->width + offset_q] = value;
+    }
+}

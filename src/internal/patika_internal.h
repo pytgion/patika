@@ -13,6 +13,10 @@
 #define PATIKA_INVALID_AGENT_INDEX 0xFFFFu
 #define PATIKA_AGENT_DEFAULT_VIEW_RADIUS 1
 
+#define AGENT_GRID_RESERVED_BIT  0x80000000  // Bit 31
+#define AGENT_GRID_OCCUPIED_BIT  0x40000000  // Bit 30 (future use)
+#define AGENT_GRID_AGENT_MASK    0x0000FFFF  // Lower 16 bits
+
 #define PATIKA_INTERNAL_LOG_DEBUG(fmt, ...) PATIKA_LOG_DEBUG("[CORE] " fmt, ##__VA_ARGS__)
 #define PATIKA_INTERNAL_LOG_INFO(fmt, ...) PATIKA_LOG_INFO("[CORE] " fmt, ##__VA_ARGS__)
 #define PATIKA_INTERNAL_LOG_WARN(fmt, ...) PATIKA_LOG_WARN("[CORE] " fmt, ##__VA_ARGS__)
@@ -98,7 +102,12 @@ struct AgentSlot
     uint8_t side;
     uint8_t active;
 
-    uint8_t explore_mode;
+    union {
+        PatrolData patrol;
+        ExploreData explore;
+        GuardData guard;
+    } behavior_data;
+
 };
 
 struct AgentPool
@@ -181,6 +190,25 @@ int map_in_bounds(MapGrid *map, int32_t q, int32_t r);
 MapTile *map_get(MapGrid *map, int32_t q, int32_t r);
 void map_set_tile_state(MapGrid *map, int32_t q, int32_t r, uint8_t state);
 
+uint32_t map_get_agent_grid(MapGrid *map, int32_t q, int32_t r);
+void map_set_agent_grid(MapGrid *map, int32_t q, int32_t r, uint32_t value);
+
+static inline AgentID map_extract_agent_id(uint32_t grid_value) {
+    return grid_value & AGENT_GRID_AGENT_MASK;
+}
+
+static inline int map_is_tile_reserved(uint32_t grid_value) {
+    return (grid_value & AGENT_GRID_RESERVED_BIT) != 0;
+}
+
+static inline int map_is_tile_occupied(uint32_t grid_value) {
+    AgentID id = map_extract_agent_id(grid_value);
+    return id != PATIKA_INVALID_AGENT_ID && !(grid_value & AGENT_GRID_RESERVED_BIT);
+}
+
+static inline int map_is_tile_empty(uint32_t grid_value) {
+    return map_extract_agent_id(grid_value) == PATIKA_INVALID_AGENT_ID;
+}
 struct PCG32
 {
     uint64_t state;
@@ -188,6 +216,32 @@ struct PCG32
 
 void pcg32_init(PCG32 *rng, uint64_t seed);
 uint32_t pcg32_next(PCG32 *rng);
+
+/* Collision */
+
+/**
+ * @brief Check if agent A can physically enter a tile where agent B exists
+ * @return 1 if can enter (no collision), 0 if blocked
+ */
+int can_agent_enter(const AgentSlot *agent_A, const AgentSlot *agent_B);
+
+/**
+ * @brief Check if agent A should attack agent B (aggression check)
+ * @return 1 if should attack, 0 if ignore
+ */
+int should_agent_attack(const AgentSlot *agent_A, const AgentSlot *agent_B);
+
+/**
+ * @brief Try to reserve a tile for agent movement
+ * @return 1 if reservation successful, 0 if failed (blocked/occupied)
+ */
+int try_reserve_tile(struct PatikaContext *ctx, AgentSlot *agent, int32_t q, int32_t r);
+
+/**
+ * @brief Clear agent's reservation (used when agent cancels movement)
+ */
+void clear_tile_reservation(MapGrid *map, int32_t q, int32_t r, AgentID agent_id);
+
 
 struct PatikaContext
 {

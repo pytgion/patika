@@ -44,7 +44,10 @@ static void process_cmd_add_agent_behavior(struct PatikaContext *ctx, const Pati
             break;
 
         case BEHAVIOR_EXPLORE:
-            agent->explore_mode = payload->behavior_params.explore.mode;
+            agent->behavior_data.explore.mode = payload->behavior_params.explore.mode;
+            agent->behavior_data.explore.cells_visited = 0;
+            agent->behavior_data.explore.last_target_q = agent->pos_q;
+            agent->behavior_data.explore.last_target_r = agent->pos_r;
             break;
 
         case BEHAVIOR_GUARD:
@@ -52,7 +55,11 @@ static void process_cmd_add_agent_behavior(struct PatikaContext *ctx, const Pati
             break;
 
         case BEHAVIOR_PATROL:
-            PATIKA_INTERNAL_LOG_WARN("use barracks Patrol behaviour");
+            agent->behavior_data.patrol.center_q = payload->behavior_params.patrol.center_q;
+            agent->behavior_data.patrol.center_r = payload->behavior_params.patrol.center_r;
+            agent->behavior_data.patrol.radius = payload->behavior_params.patrol.radius;
+            agent->behavior_data.patrol.waypoint_index = 0;
+            agent->behavior_data.patrol.idle_timer = 0.0f;
             break;
 
         case BEHAVIOR_FLEE:
