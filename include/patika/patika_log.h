@@ -92,11 +92,6 @@ PATIKA_LOG_API void patika_log_write(PatikaLogLevel level, const char *file,
  */
 PATIKA_LOG_API const char *patika_log_level_str(PatikaLogLevel level);
 
-/* ============================================================================
- *  LOGGING MACROS (use these in your code)
- * ============================================================================
- */
-
 #ifdef PATIKA_DEBUG
 #define PATIKA_LOG_DEBUG(fmt, ...)                                             \
   patika_log_write(PATIKA_LOG_DEBUG, __FILE__, __LINE__, fmt, ##__VA_ARGS__)

@@ -22,7 +22,7 @@ void mpsc_destroy(MPSCCommandQueue *q) {
  * @brief Pushes a command to the queue (thread-safe).
  * @return 0 on success, -1 if queue is full.
  */
-int mpsc_push(MPSCCommandQueue *q, const PatikaCommand *cmd) {
+PatikaError mpsc_push(MPSCCommandQueue *q, const PatikaCommand *cmd) {
   uint32_t current_head;
   uint32_t next_head;
 
@@ -41,14 +41,14 @@ int mpsc_push(MPSCCommandQueue *q, const PatikaCommand *cmd) {
   // Write command to reserved slot
   q->buffer[current_head] = *cmd;
 
-  return 0; // SUCCESS
+  return PATIKA_OK;
 }
 
 /**
  * @brief Pops a command from the queue (single consumer only).
  * @return 0 on success, -1 if queue is empty.
  */
-int mpsc_pop(MPSCCommandQueue *q, PatikaCommand *out) {
+PatikaError mpsc_pop(MPSCCommandQueue *q, PatikaCommand *out) {
   uint32_t head = atomic_load_explicit(&q->head, memory_order_acquire);
 
   if (q->tail == head) {

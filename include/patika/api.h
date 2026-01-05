@@ -15,16 +15,9 @@
 extern "C" {
     #endif
 
-    /* ============================================================================
-     * Lifecycle
-     * ========================================================================= */
-
     PATIKA_API PatikaHandle patika_create(const PatikaConfig *config);
     PATIKA_API void patika_destroy(PatikaHandle handle);
 
-    /* ============================================================================
-     * Command Submission
-     * ========================================================================= */
 
     PATIKA_API PatikaError patika_submit_command(
         PatikaHandle handle,
@@ -37,9 +30,6 @@ extern "C" {
         uint32_t count
     );
 
-    /* ============================================================================
-     * Simulation
-     * ========================================================================= */
 
     PATIKA_API void patika_tick(PatikaHandle handle);
 
@@ -49,26 +39,20 @@ extern "C" {
         uint32_t max_events
     );
 
-    /* ============================================================================
-     * Queries
-     * ========================================================================= */
 
     PATIKA_API const PatikaSnapshot *patika_get_snapshot(PatikaHandle handle);
     PATIKA_API PatikaStats patika_get_stats(PatikaHandle handle);
 
-    /* ============================================================================
-     * Convenience Functions
-     * ========================================================================= */
-    // it still pushes command to queue
-    PATIKA_API PatikaError patika_add_agent_sync(
-        PatikaHandle handle,
-        int32_t start_q,
-        int32_t start_r,
-        uint8_t faction,
-        uint8_t side,
-        BuildingID parent_barrack,
-        AgentID *id_output
-    );
+    // it still pushes command to queue (use payloads instead)
+//    PATIKA_API PatikaError patika_add_agent_sync(
+//        PatikaHandle handle,
+//        int32_t start_q,
+//        int32_t start_r,
+//        uint8_t faction,
+//        uint8_t side,
+//        BuildingID parent_barrack,
+//        AgentID *id_output
+//    );
 
 
     #ifdef __cplusplus

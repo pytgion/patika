@@ -8,9 +8,6 @@
 extern "C" {
     #endif
 
-    /* ============================================================================
-     * API Export Macros
-     * ========================================================================= */
     #ifdef _WIN32
     #ifdef PATIKA_EXPORTS
     #define PATIKA_API __declspec(dllexport)
@@ -29,10 +26,6 @@ extern "C" {
     #endif
     #endif
 
-    /* ============================================================================
-     * Base Type Definitions
-     * ========================================================================= */
-
     /** @brief Opaque agent identifier */
     typedef uint32_t AgentID;
 
@@ -41,12 +34,6 @@ extern "C" {
 
     /** @brief Opaque simulation context handle */
     typedef struct PatikaContext *PatikaHandle;
-
-
-
-    /* ============================================================================
-     * Constants
-     * ========================================================================= */
 
     PATIKA_API extern const uint32_t PATIKA_INVALID_AGENT_ID;
     PATIKA_API extern const uint16_t PATIKA_INVALID_BARRACK_ID;

@@ -5,10 +5,6 @@
 extern "C" {
     #endif
 
-    /* ============================================================================
-     * Error Codes
-     * ========================================================================= */
-
     /**
      * @brief Error codes returned by public API functions
      */
@@ -23,10 +19,6 @@ extern "C" {
         PATIKA_ERR_NULL_HANDLE = 6,
         PATIKA_ERR_INVALID_COMMAND_TYPE = 7
     } PatikaError;
-
-    /* ============================================================================
-     * Command & Event Types
-     * ========================================================================= */
 
     /**
      * @brief Command types accepted by the simulation
@@ -85,10 +77,6 @@ extern "C" {
         EVENT_AGENT_REMOVED = 4
     } EventType;
 
-    /* ============================================================================
-     * Map & Building Types
-     * ========================================================================= */
-
     /**
      * @brief Map type identifiers
      */
@@ -109,10 +97,6 @@ extern "C" {
         BUILDING_WALL = 3,
         BUILDING_TRAP = 4
     } BuildingType;
-
-    /* ============================================================================
-     * Agent Behavior & State
-     * ========================================================================= */
 
     /**
      * @brief High-level agent behavior (what is the agent doing?)

@@ -44,8 +44,8 @@ struct MPSCCommandQueue
 
 void mpsc_init(MPSCCommandQueue *q, uint32_t capacity);
 void mpsc_destroy(MPSCCommandQueue *q);
-int mpsc_push(MPSCCommandQueue *q, const PatikaCommand *cmd);
-int mpsc_pop(MPSCCommandQueue *q, PatikaCommand *out);
+PatikaError mpsc_push(MPSCCommandQueue *q, const PatikaCommand *cmd);
+PatikaError mpsc_pop(MPSCCommandQueue *q, PatikaCommand *out);
 
 struct SPSCEventQueue
 {
@@ -57,8 +57,8 @@ struct SPSCEventQueue
 
 void spsc_init(SPSCEventQueue *q, uint32_t capacity);
 void spsc_destroy(SPSCEventQueue *q);
-int spsc_push(SPSCEventQueue *q, const PatikaEvent *evt);
-int spsc_pop(SPSCEventQueue *q, PatikaEvent *out);
+PatikaError spsc_push(SPSCEventQueue *q, const PatikaEvent *evt);
+PatikaError spsc_pop(SPSCEventQueue *q, PatikaEvent *out);
 
 typedef struct {
     int32_t center_q, center_r;
