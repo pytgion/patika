@@ -41,14 +41,29 @@ void agent_arrive_at_tile(struct PatikaContext *ctx, AgentSlot *agent) {
     }
 }
 
+
+
 void process_movement(struct PatikaContext *ctx, AgentSlot *agent)
 {
-    if (agent->progress >= AGENT_PROGRESS_MAX_DISTANCE)
+    MapTile *tile = map_get(&ctx->map, agent->next_q, agent->next_r);
+
+    if (!tile || tile->state != 0)
     {
-        agent_arrive_at_tile(ctx, agent);
-    }
-    else {
-        agent->progress += agent->speed; // TODO: a multipler based on tile's occupation level
+        agent->state = STATE_CALCULATING;
+        return;
     }
 
+    agent->pos_q = agent->next_q;
+    agent->pos_r = agent->next_r;
+
+    if (agent->pos_q == agent->target_q && agent->pos_r == agent->target_r)
+    {
+        agent->state = STATE_IDLE;
+        PatikaEvent evt = {EVENT_REACHED_GOAL, agent->id, agent->pos_q, agent->pos_r};
+        spsc_push(&ctx->event_queue, &evt);
+    }
+    else
+    {
+        agent->state = STATE_CALCULATING;
+    }
 }
