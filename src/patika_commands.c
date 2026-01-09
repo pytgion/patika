@@ -11,7 +11,6 @@ static void process_cmd_add_agent_behavior(struct PatikaContext *ctx, const Pati
         return;
     }
 
-    // 1. Havuzdan yer al
     AgentID id = agent_pool_allocate(&ctx->agents);
     if (id == PATIKA_INVALID_AGENT_ID)
     {
