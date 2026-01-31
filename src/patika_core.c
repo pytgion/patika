@@ -127,13 +127,17 @@ PATIKA_API void patika_tick(PatikaHandle handle)
         {
             continue;
         }
+        PATIKA_LOG_WARN("AGENT BEHAVIOUR IS : %d",agent->behavior);
+        PATIKA_LOG_WARN("AGENT STATE IS : %d",agent->state);
 
         if (agent->state == STATE_CALCULATING)
         { // WAITING_FOR_CALC
+            PATIKA_LOG_WARN("Agent state calculating...");
             compute_next_step(handle, agent);
         }
         else if (agent->state == STATE_MOVING)
         {
+            PATIKA_LOG_WARN("Agent state moving....");
             process_movement(handle, agent);
         }
     }

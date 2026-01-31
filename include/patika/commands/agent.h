@@ -25,7 +25,7 @@ typedef struct {
             AgentID target_id;
         } agent;
         struct {
-            BuildingID building; // TODO: expand it for general building.
+            BuildingID building;
         } entity;
     } data;
 } AgentInteraction;
