@@ -11,7 +11,7 @@ static int get_dist(int q1, int r1, int q2, int r2)
 
 void compute_next_step(struct PatikaContext *ctx, AgentSlot *agent)
 {
-    if (agent->pos_q == agent->target_q && agent->pos_r == agent->target_r)
+    if (agent->pos_q == agent->target_q && agent->pos_r == agent->target_r && agent->behavior == BEHAVIOR_IDLE)
     {
         agent->state = STATE_IDLE;
         PatikaEvent event = {EVENT_REACHED_GOAL, agent->id, agent->pos_q, agent->pos_r};
@@ -55,12 +55,14 @@ void compute_next_step(struct PatikaContext *ctx, AgentSlot *agent)
         agent->next_q = agent->pos_q + HEX_DIRS[choice][0];
         agent->next_r = agent->pos_r + HEX_DIRS[choice][1];
         agent->state = STATE_MOVING;
+        PATIKA_LOG_DEBUG("Agent moving...");
     }
     else
     {
         agent->state = STATE_IDLE;
         PatikaEvent evt = {EVENT_STUCK, agent->id, agent->pos_q, agent->pos_r};
         spsc_push(&ctx->event_queue, &evt);
+        PATIKA_LOG_DEBUG("Agent IDLE, canditate count <= 0");
     }
 
 }
