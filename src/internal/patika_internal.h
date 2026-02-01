@@ -173,7 +173,6 @@ struct MapTile
     // TODO: implement sectorID
     uint8_t state;
     uint8_t occupancy;
-    uint8_t *sub_pos; // represents 8 equal partition of a hexagon, think twice before use it
     uint16_t sectorID;
 };
 

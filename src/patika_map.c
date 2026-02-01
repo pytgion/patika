@@ -13,8 +13,16 @@ void map_init(MapGrid *map, uint8_t type, uint32_t width, uint32_t height)
         // For hexagonal maps, width represents the radius
         // Total tiles = 3*r^2 + 3*r + 1
         int radius = (int)width;
-        int tile_count = (3 * radius * radius) + (3 * radius) + 1;
+//        int tile_count = (3 * radius * radius) + (3 * radius) + 1;
+        /* we use diameter for simplicity, a squared area will be allocated in the heap, however edge cases must be handleded (literally, edge tiles must be observed)*/
+        int tile_count = (2 * radius + 1) * (2 * radius + 1);
         map->tiles = calloc(tile_count, sizeof(MapTile));
+        for (int i = 0; i < tile_count; i++)
+        {
+            map->tiles[i].state = 0; // default walkable
+            map->tiles[i].occupancy = 0;
+            map->tiles[i].sectorID = 0;
+        }
         map->agent_grid = calloc(tile_count, sizeof(AgentID)); // TODO: for beta there is only one agent per tile, it will be changed
         for (int i = 0; i < tile_count; i++)
         {
@@ -24,10 +32,27 @@ void map_init(MapGrid *map, uint8_t type, uint32_t width, uint32_t height)
         map->width = (radius * 2) + 1;
         map->height = (radius * 2) + 1;
     }
-    else
+    else if (type == MAP_TYPE_RECTANGULAR)
     {
+        int tile_count = (int)(width * height);
         map->tiles = calloc((unsigned long)width * height, sizeof(MapTile));
         map->agent_grid = calloc((unsigned long)width * height, sizeof(AgentID)); // maybe
+        for (uint32_t i = 0; i < width * height; i++)
+        {
+            map->tiles[i].state = 0; // default walkable
+            map->tiles[i].occupancy = 0;
+            map->tiles[i].sectorID = 0;
+        }
+        for (int i = 0; i < tile_count; i++)
+        {
+            map->agent_grid[i] = PATIKA_INVALID_AGENT_ID;
+        }
+    }
+    else 
+    {
+        PATIKA_LOG_ERROR("Unknown map type %d in map_init", type);
+        map->tiles = NULL;
+        map->agent_grid = NULL;
     }
 }
 
