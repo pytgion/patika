@@ -41,7 +41,7 @@ void process_command(struct PatikaContext *ctx, const PatikaCommand *cmd)
             return;
         }
 
-        if (try_reserve_tile(ctx, agent, payload->start_q, payload->start_r) != 1)
+        if (try_reserve_tile(ctx, agent, payload->start_q, payload->start_r) != 0)
         {
             agent_pool_free(&ctx->agents, id);
             PATIKA_LOG_ERROR("ADD_AGENT: tile (%d, %d) is occupied",
@@ -118,7 +118,7 @@ void process_command(struct PatikaContext *ctx, const PatikaCommand *cmd)
             return;
         }
 
-        if (try_reserve_tile(ctx, agent, payload->start_q, payload->start_r) != 1)
+        if (try_reserve_tile(ctx, agent, payload->start_q, payload->start_r) != 0)
         {
             agent_pool_free(&ctx->agents, id);
             PATIKA_LOG_ERROR("ADD_AGENT_WITH_BEHAVIOR: tile (%d, %d) is occupied",
