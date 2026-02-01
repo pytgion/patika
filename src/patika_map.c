@@ -2,6 +2,9 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+// safe absolute for int32_t
+#define ABS_I32(x) ((x) < 0 ? -(x) : (x))
+
 void map_init(MapGrid *map, uint8_t type, uint32_t width, uint32_t height)
 {
     map->type = type;
@@ -95,7 +98,7 @@ int map_in_bounds(MapGrid *map, int32_t q, int32_t r)
     else if (map->type == MAP_TYPE_HEXAGONAL)
     {
         // Get radius from stored dimensions
-        int radius = (map->width - 1) / 2;
+        int radius = map_get_radius(map);
 
         // Hexagonal constraint: |q + r| <= radius
         return abs(q) <= radius && abs(r) <= radius && abs(q + r) <= radius;
@@ -119,7 +122,7 @@ MapTile *map_get(MapGrid *map, int32_t q, int32_t r)
     else if (map->type == MAP_TYPE_HEXAGONAL)
     {
         // Offset coordinates to array space (0-based indexing)
-        int radius = (map->width - 1) / 2;
+        int radius = map_get_radius(map);
         int offset_q = q + radius;
         int offset_r = r + radius;
 
@@ -146,6 +149,8 @@ void map_set_tile_state(MapGrid *map, int32_t q, int32_t r, uint8_t state)
  */
 uint32_t map_get_agent_grid(MapGrid *map, int32_t q, int32_t r)
 {
+    if (!map->agent_grid)
+        return PATIKA_INVALID_AGENT_ID;
     if (!map_in_bounds(map, q, r))
         return PATIKA_INVALID_AGENT_ID;
 
@@ -155,7 +160,7 @@ uint32_t map_get_agent_grid(MapGrid *map, int32_t q, int32_t r)
     }
     else if (map->type == MAP_TYPE_HEXAGONAL)
     {
-        int radius = (map->width - 1) / 2;
+        int radius = map_get_radius(map);
         int offset_q = q + radius;
         int offset_r = r + radius;
         return map->agent_grid[offset_r * map->width + offset_q];
@@ -181,10 +186,14 @@ void map_set_agent_grid(MapGrid *map, int32_t q, int32_t r, uint32_t value)
     }
     else // MAP_TYPE_HEXAGONAL
     {
-        int radius = (map->width - 1) / 2;
+        int radius = map_get_radius(map);
         int offset_q = q + radius;
         int offset_r = r + radius;
         map->agent_grid[offset_r * map->width + offset_q] = value;
     }
+}
+
+static inline int32_t map_get_radius(MapGrid *map) {
+    return (map->width - 1) / 2;
 }
 
