@@ -17,6 +17,11 @@ void map_init(MapGrid *map, uint8_t type, uint32_t width, uint32_t height)
         /* we use diameter for simplicity, a squared area will be allocated in the heap, however edge cases must be handleded (literally, edge tiles must be observed)*/
         int tile_count = (2 * radius + 1) * (2 * radius + 1);
         map->tiles = calloc(tile_count, sizeof(MapTile));
+        if (!map->tiles)
+        {
+            PATIKA_LOG_ERROR("map_init: failed to allocate memory for hexagonal map tiles");
+            return;
+        }
         for (int i = 0; i < tile_count; i++)
         {
             map->tiles[i].state = 0; // default walkable
@@ -24,6 +29,13 @@ void map_init(MapGrid *map, uint8_t type, uint32_t width, uint32_t height)
             map->tiles[i].sectorID = 0;
         }
         map->agent_grid = calloc(tile_count, sizeof(AgentID)); // TODO: for beta there is only one agent per tile, it will be changed
+        if (!map->agent_grid)
+        {
+            PATIKA_LOG_ERROR("map_init: failed to allocate memory for hexagonal map agent grid");
+            free(map->tiles);
+            map->tiles = NULL;
+            return;
+        }
         for (int i = 0; i < tile_count; i++)
         {
             map->agent_grid[i] = PATIKA_INVALID_AGENT_ID; //means empty
@@ -36,7 +48,19 @@ void map_init(MapGrid *map, uint8_t type, uint32_t width, uint32_t height)
     {
         int tile_count = (int)(width * height);
         map->tiles = calloc((unsigned long)width * height, sizeof(MapTile));
+        if (!map->tiles)
+        {
+            PATIKA_LOG_ERROR("map_init: failed to allocate memory for rectangular map tiles");
+            return;
+        }
         map->agent_grid = calloc((unsigned long)width * height, sizeof(AgentID)); // maybe
+        if (!map->agent_grid)
+        {
+            PATIKA_LOG_ERROR("map_init: failed to allocate memory for rectangular map agent grid");
+            free(map->tiles);
+            map->tiles = NULL;
+            return;
+        }
         for (uint32_t i = 0; i < width * height; i++)
         {
             map->tiles[i].state = 0; // default walkable
