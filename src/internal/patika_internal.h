@@ -223,19 +223,19 @@ uint32_t pcg32_next(PCG32 *rng);
 
 /**
  * @brief Check if agent A can physically enter a tile where agent B exists
- * @return 1 if can enter (no collision), 0 if blocked
+ * @return 0 if can enter (no collision), non-zero if blocked
  */
 int can_agent_enter(const AgentSlot *agent_A, const AgentSlot *agent_B);
 
 /**
  * @brief Check if agent A should attack agent B (aggression check)
- * @return 1 if should attack, 0 if ignore
+ * @return 0 if should attack, non-zero if ignore
  */
 int should_agent_attack(const AgentSlot *agent_A, const AgentSlot *agent_B);
 
 /**
  * @brief Try to reserve a tile for agent movement
- * @return 1 if reservation successful, 0 if failed (blocked/occupied)
+ * @return 0 if reservation successful, non-zero if failed (blocked/occupied)
  */
 int try_reserve_tile(struct PatikaContext *ctx, AgentSlot *agent, int32_t q, int32_t r);
 

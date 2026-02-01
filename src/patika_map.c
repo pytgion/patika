@@ -15,7 +15,7 @@ void map_init(MapGrid *map, uint8_t type, uint32_t width, uint32_t height)
         int radius = (int)width;
         int tile_count = (3 * radius * radius) + (3 * radius) + 1;
         map->tiles = calloc(tile_count, sizeof(MapTile));
-        map->agent_grid = calloc(tile_count, sizeof(AgentID)); // TODO: for beta there will be only one agent per tile, it will be changed
+        map->agent_grid = calloc(tile_count, sizeof(AgentID)); // TODO: for beta there is only one agent per tile, it will be changed
         for (int i = 0; i < tile_count; i++)
         {
             map->agent_grid[i] = PATIKA_INVALID_AGENT_ID; //means empty
@@ -43,13 +43,18 @@ int map_in_bounds(MapGrid *map, int32_t q, int32_t r)
     {
         return q >= 0 && q < (int32_t)map->width && r >= 0 && r < (int32_t)map->height;
     }
-    else // MAP_TYPE_HEXAGONAL
+    else if (map->type == MAP_TYPE_HEXAGONAL)
     {
         // Get radius from stored dimensions
         int radius = (map->width - 1) / 2;
 
         // Hexagonal constraint: |q + r| <= radius
         return abs(q) <= radius && abs(r) <= radius && abs(q + r) <= radius;
+    }
+    else 
+    {
+        PATIKA_LOG_ERROR("Unknown map type %d in map_in_bounds", map->type);
+        return 0;
     }
 }
 
@@ -62,7 +67,7 @@ MapTile *map_get(MapGrid *map, int32_t q, int32_t r)
     {
         return &map->tiles[(r * map->width) + q];
     }
-    else // MAP_TYPE_HEXAGONAL
+    else if (map->type == MAP_TYPE_HEXAGONAL)
     {
         // Offset coordinates to array space (0-based indexing)
         int radius = (map->width - 1) / 2;
@@ -70,6 +75,11 @@ MapTile *map_get(MapGrid *map, int32_t q, int32_t r)
         int offset_r = r + radius;
 
         return &map->tiles[offset_r * map->width + offset_q];
+    }
+    else 
+    {
+        PATIKA_LOG_ERROR("Unknown map type %d in map_get", map->type);
+        return NULL;
     }
 }
 
@@ -94,12 +104,17 @@ uint32_t map_get_agent_grid(MapGrid *map, int32_t q, int32_t r)
     {
         return map->agent_grid[(r * map->width) + q];
     }
-    else // MAP_TYPE_HEXAGONAL
+    else if (map->type == MAP_TYPE_HEXAGONAL)
     {
         int radius = (map->width - 1) / 2;
         int offset_q = q + radius;
         int offset_r = r + radius;
         return map->agent_grid[offset_r * map->width + offset_q];
+    }
+    else 
+    {
+        PATIKA_LOG_ERROR("Unknown map type %d in map_get_agent_grid", map->type);
+        return PATIKA_INVALID_AGENT_ID;
     }
 }
 
