@@ -173,7 +173,6 @@ struct MapTile
     // TODO: implement sectorID
     uint8_t state;
     uint8_t occupancy;
-    uint8_t *sub_pos; // represents 8 equal partition of a hexagon, think twice before use it
     uint16_t sectorID;
 };
 
@@ -183,7 +182,7 @@ struct MapGrid
     MapTile *tiles;
     uint32_t width;
     uint32_t height;
-    AgentID *agent_grid;
+    AgentID *agent_grid; // why the fuck is it there??
 };
 
 void map_init(MapGrid *map, uint8_t type, uint32_t width, uint32_t height);
