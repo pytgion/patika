@@ -2,7 +2,7 @@
 
 A lock-free agent simulation engine used in project Germ Storm. Manages large-scale agent movement with pathfinding, handles commands from multiple threads, and streams events in real-time. Written in C11.
 
-Patika solves the problem of high CPU load and concurrency issues when managing tens of thousands of moving agents in real-time simulations (like crowd management or multiplayer queries). It achieves this efficiency by treating agents not as heavy, individual objects, but as simple data references, enabling grand-scale operations without the overhead of traditional locking mechanisms.
+Patika solves the problem of high CPU load and concurrency issues when managing tens of thousands of moving agents in real-time simulations (like crowd management or multiplayer queries). It achieves this efficiency by treating agents not as individual objects, but as simple data references, enabling grand-scale operations without the overhead of traditional locking mechanisms.
 
 ## Usage
 
@@ -33,5 +33,5 @@ patika_poll_events(sim, events, max);
 
 patika_destroy(sim);
 ```
-Multi-threaded producers submit commands via lock-free MPSC queue. Single simulation thread processes commands, updates agent positions via hex pathfinding, and emits events through SPSC queue. Snapshot API provides lock-free reads of world state. Agents have generational IDs to prevent use-after-free.
+Multi-threaded producers submit commands via lock-free MPSC queue. Single simulation thread processes commands, updates agent positions and emits events through SPSC queue. Snapshot API provides lock-free reads of world state. Agents have generational IDs to prevent use-after-free.
 
