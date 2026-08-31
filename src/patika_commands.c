@@ -44,6 +44,7 @@ void process_command(struct PatikaContext *ctx, const PatikaCommand *cmd)
         agent->collision_data = p->collision_data;
         agent->behavior = BEHAVIOR_IDLE;
         agent->state    = STATE_IDLE;
+        agent->path_len = agent->path_cursor = 0;
 
         if (p->out_agent_id) *p->out_agent_id = agent->id;
 
@@ -96,6 +97,7 @@ void process_command(struct PatikaContext *ctx, const PatikaCommand *cmd)
         agent->collision_data.layer         = p->collision_data.layer;
         agent->collision_data.collision_mask = p->collision_data.collision_mask;
         agent->behavior = p->initial_behavior;
+        agent->path_len = agent->path_cursor = 0;
 
         switch (p->initial_behavior)
         {
@@ -176,6 +178,7 @@ void process_command(struct PatikaContext *ctx, const PatikaCommand *cmd)
         agent->target_r = cmd->set_goal.goal_r;
         agent->behavior = BEHAVIOR_IDLE;
         agent->state    = STATE_CALCULATING;
+        agent->path_len = agent->path_cursor = 0; /* cached route was for the old target */
 
         PATIKA_LOG_DEBUG("SET_GOAL: agent %u -> (%d,%d)",
                          agent->id, agent->target_q, agent->target_r);

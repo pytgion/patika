@@ -13,6 +13,11 @@
 #define PATIKA_INVALID_AGENT_INDEX 0xFFFFu
 #define PATIKA_AGENT_DEFAULT_VIEW_RADIUS 1
 
+/* Waypoints cached per agent beyond the immediate next_q/next_r step (see
+ * AgentSlot.path_q/path_r).  Bounds the replan-avoidance cache to a small,
+ * fixed amount of memory per agent rather than the full path length. */
+#define PATIKA_AGENT_PATH_CACHE 8
+
 #define AGENT_GRID_RESERVED_BIT  0x80000000  // Bit 31
 #define AGENT_GRID_AGENT_MASK    0x0000FFFF  // Lower 16 bits
 
@@ -104,6 +109,16 @@ struct AgentSlot
     /* Flow field assigned to this agent.  PATIKA_INVALID_FLOW_FIELD_ID = none
      * (agent falls back to per-agent A* when sector_size == 0). */
     FlowFieldID flow_field_id;
+
+    /* Waypoints beyond next_q/next_r, taken from the tail of the last A*
+     * search instead of discarding it.  Avoids a full grid re-search every
+     * tick for an agent that already has a valid route — process_movement
+     * consumes one entry per tick and only falls back to STATE_CALCULATING
+     * once the cache is exhausted or the next tile turns out to be blocked. */
+    int32_t path_q[PATIKA_AGENT_PATH_CACHE];
+    int32_t path_r[PATIKA_AGENT_PATH_CACHE];
+    uint8_t path_len;    /* valid entries in path_q/path_r */
+    uint8_t path_cursor; /* index of the next entry to consume */
 
     union {
         PatrolData patrol;

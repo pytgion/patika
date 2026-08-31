@@ -182,16 +182,41 @@ static int astar(struct PatikaContext *ctx, AgentSlot *agent,
     }
 
     if (found) {
-        /* Trace the path back to find the first step after start. */
-        uint32_t step = goal_idx;
-        while (nodes[step].parent != start_idx) {
-            step = nodes[step].parent;
+        /* Trace the path back from goal to start via parent pointers, but
+         * only materialize the near-start portion into the agent: the
+         * immediate next step (next_q/next_r) plus up to
+         * PATIKA_AGENT_PATH_CACHE steps after it. This is the same walk the
+         * old code did to find just the first step — the rest of the path
+         * was already being computed, just thrown away. Keeping a bounded
+         * tail of it means process_movement can advance several ticks
+         * without calling astar() again. */
+        uint32_t path_len = 0;
+        for (uint32_t s = goal_idx; s != start_idx; s = nodes[s].parent) path_len++;
+
+        uint32_t take = (path_len < PATIKA_AGENT_PATH_CACHE + 1)
+                        ? path_len : (PATIKA_AGENT_PATH_CACHE + 1);
+        uint32_t skip = path_len - take;
+
+        int32_t  buf_q[PATIKA_AGENT_PATH_CACHE + 1];
+        int32_t  buf_r[PATIKA_AGENT_PATH_CACHE + 1];
+        uint32_t n = 0, i = 0;
+        for (uint32_t s = goal_idx; s != start_idx; s = nodes[s].parent, i++) {
+            if (i >= skip) {
+                idx_to_grid(map, s, &buf_q[n], &buf_r[n]);
+                n++;
+            }
         }
-        int32_t nq, nr;
-        idx_to_grid(map, step, &nq, &nr);
-        agent->next_q = nq;
-        agent->next_r = nr;
-        agent->state  = STATE_MOVING;
+        /* buf[0..n-1] is in goal->start order; buf[n-1] is the first step. */
+        agent->next_q = buf_q[n - 1];
+        agent->next_r = buf_r[n - 1];
+        agent->path_len = 0;
+        for (int32_t j = (int32_t)n - 2; j >= 0; j--) {
+            agent->path_q[agent->path_len] = buf_q[j];
+            agent->path_r[agent->path_len] = buf_r[j];
+            agent->path_len++;
+        }
+        agent->path_cursor = 0;
+        agent->state = STATE_MOVING;
     }
 
     return found;
