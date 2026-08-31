@@ -36,16 +36,17 @@ typedef struct PCG32 PCG32;
 
 struct MPSCCommandQueue
 {
-    PatikaCommand *buffer;
-    uint32_t capacity;
-    _Atomic uint32_t head;
-    uint32_t tail;
+    PatikaCommand    *buffer;
+    _Atomic uint8_t  *ready;
+    uint32_t          capacity;
+    _Atomic uint32_t  head;
+    uint32_t          tail;
 };
 
-void mpsc_init(MPSCCommandQueue *q, uint32_t capacity);
-void mpsc_destroy(MPSCCommandQueue *q);
-PatikaError mpsc_push(MPSCCommandQueue *q, const PatikaCommand *cmd);
-PatikaError mpsc_pop(MPSCCommandQueue *q, PatikaCommand *out);
+void        mpsc_init   (MPSCCommandQueue *q, uint32_t capacity);
+void        mpsc_destroy(MPSCCommandQueue *q);
+PatikaError mpsc_push   (MPSCCommandQueue *q, const PatikaCommand *cmd);
+PatikaError mpsc_pop    (MPSCCommandQueue *q, PatikaCommand *out);
 
 struct SPSCEventQueue
 {
