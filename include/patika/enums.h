@@ -34,6 +34,9 @@ extern "C" {
 
         /* Map */
         CMD_SET_TILE_STATE         = 19,
+
+        /* Flow field */
+        CMD_SET_FLOW_FIELD         = 20,
     } CommandType;
 
     typedef enum
@@ -65,6 +68,7 @@ extern "C" {
         STATE_MOVING       = 2,  /* moving one tile (per-agent A* path)              */
         STATE_INTERACTING  = 3,
         STATE_REMOVE_QUEUE = 4,
+        STATE_FLOW_FIELD   = 5   /* following a flow field                           */
     } AgentState;
 
 #ifdef __cplusplus

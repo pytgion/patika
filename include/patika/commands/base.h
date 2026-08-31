@@ -3,6 +3,7 @@
 
 #include "../types.h"
 #include "../enums.h"
+#include "../flowfield.h"
 #include "agent.h"
 #include "barrack.h"
 
@@ -37,6 +38,11 @@ typedef struct PatikaCommand
         struct {
             BuildingID barrack_id;
         } remove_barrack;
+
+        struct {
+            AgentID     agent_id;
+            FlowFieldID flow_field_id;  /* PATIKA_INVALID_FLOW_FIELD_ID = detach */
+        } set_flow_field;
 
         AddAgentPayload             add_agent;
         AddAgentWithBehaviorPayload add_agent_with_behavior;

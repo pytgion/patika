@@ -10,6 +10,7 @@
 #include "patika/types.h"
 #include "patika/enums.h"
 #include "patika/config.h"
+#include "patika/flowfield.h"
 #include "patika/commands/base.h"
 #include "patika/commands/agent.h"
 #include "patika/commands/barrack.h"

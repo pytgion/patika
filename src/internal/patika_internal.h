@@ -37,6 +37,7 @@ typedef struct BarrackPool BarrackPool;
 typedef struct MapTile MapTile;
 typedef struct MapGrid MapGrid;
 typedef struct PCG32 PCG32;
+typedef struct SectorGrid SectorGrid;
 
 struct MPSCCommandQueue
 {
@@ -99,6 +100,10 @@ struct AgentSlot
     uint8_t group;
     uint8_t team;
     uint8_t active;
+
+    /* Flow field assigned to this agent.  PATIKA_INVALID_FLOW_FIELD_ID = none
+     * (agent falls back to per-agent A* when sector_size == 0). */
+    FlowFieldID flow_field_id;
 
     union {
         PatrolData patrol;
@@ -253,6 +258,53 @@ void clear_tile_reservation(MapGrid *map, int32_t q, int32_t r, AgentID agent_id
 
 void process_movement(struct PatikaContext *ctx, AgentSlot *agent);
 
+/* -------------------------------------------------------------------------
+ * Flow field (internal interface)
+ * ------------------------------------------------------------------------- */
+
+PatikaFlowField *flow_field_compute(MapGrid *map, int32_t goal_q, int32_t goal_r);
+void             flow_field_free   (PatikaFlowField *ff);
+
+/* Returns the direction index toward the goal from (q,r), or 0xFF. */
+uint8_t flow_field_get_dir(const PatikaFlowField *ff, int32_t q, int32_t r);
+
+/* Returns 1 and fills (out_q, out_r) with the next tile; 0 if at goal or stuck. */
+int flow_field_step(const PatikaFlowField *ff, int32_t q, int32_t r,
+                    int32_t *out_q, int32_t *out_r);
+
+/* -------------------------------------------------------------------------
+ * Sector system (internal interface)
+ * ------------------------------------------------------------------------- */
+
+#define PATIKA_MAX_SECTOR_ADJ 4  /* rectangular grid: at most 4 adjacent sectors */
+
+typedef struct {
+    SectorID id;
+    SectorID adj[PATIKA_MAX_SECTOR_ADJ];
+    uint8_t  adj_count;
+    uint8_t  passable;
+} SectorNode;
+
+struct SectorGrid
+{
+    SectorNode *nodes;
+    uint16_t    sw;          /* sectors across width  */
+    uint16_t    sh;          /* sectors across height */
+    uint16_t    count;
+    uint32_t    tile_size;
+};
+
+/* Build / rebuild sector adjacency graph from the current map state. */
+PatikaError sector_grid_init   (SectorGrid *sg, const MapGrid *map, uint32_t tile_size);
+void        sector_grid_destroy(SectorGrid *sg);
+PatikaError sector_grid_rebuild(SectorGrid *sg, const MapGrid *map);
+
+/* Sector containing tile (q, r).  Returns PATIKA_INVALID_SECTOR_ID if
+ * the sector system is not active (tile_size == 0) or tile is out of bounds. */
+SectorID sector_of(const SectorGrid *sg, int32_t q, int32_t r);
+
+/* A* on sector graph.  Returns 1 if goal_sec is reachable from start_sec. */
+int sector_astar(const SectorGrid *sg, SectorID start_sec, SectorID goal_sec);
 
 struct PatikaContext
 {
@@ -274,6 +326,13 @@ struct PatikaContext
     PathNode *astar_nodes;
     uint32_t *astar_heap;
     uint32_t  astar_grid_size;
+
+    /* Flow field slots — shared by all agents pointing to the same goal. */
+    PatikaFlowField *flow_fields[PATIKA_MAX_FLOW_FIELDS];
+
+    /* Sector graph (active only when config.sector_size > 0 and
+     * map type is MAP_TYPE_RECTANGULAR). */
+    SectorGrid sectors;
 };
 void process_command(struct PatikaContext *ctx, const PatikaCommand *cmd);
 

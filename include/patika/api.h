@@ -62,6 +62,33 @@ extern "C" {
 
     PATIKA_API PatikaError patika_load_map(PatikaHandle handle, const uint8_t *map_states, uint32_t width, uint32_t height);
 
+    /*
+     * Flow fields
+     *
+     * Compute a BFS flow field toward (goal_q, goal_r) given the current map
+     * obstacle state.  Up to PATIKA_MAX_FLOW_FIELDS (16) can be live at once.
+     * Multiple agents may share the same flow field ID — assign it via
+     * CMD_SET_FLOW_FIELD.
+     *
+     * patika_rebuild_flow_field: recomputes an existing slot in-place (e.g.
+     * after obstacle changes).  Use when agents are already following a field
+     * whose map has changed.
+     */
+    PATIKA_API PatikaError patika_compute_flow_field  (PatikaHandle handle, int32_t goal_q, int32_t goal_r, FlowFieldID *out_id);
+    PATIKA_API void        patika_free_flow_field      (PatikaHandle handle, FlowFieldID id);
+    PATIKA_API PatikaError patika_rebuild_flow_field   (PatikaHandle handle, FlowFieldID id);
+
+    /*
+     * Sector system
+     *
+     * Sectors partition the map into square chunks of config.sector_size tiles.
+     * Rebuilding recomputes the adjacency graph — call after bulk tile-state
+     * changes.  patika_create calls this automatically when sector_size > 0.
+     *
+     * Only supported for MAP_TYPE_RECTANGULAR.
+     */
+    PATIKA_API PatikaError patika_rebuild_sectors(PatikaHandle handle);
+
 #ifdef __cplusplus
 }
 #endif

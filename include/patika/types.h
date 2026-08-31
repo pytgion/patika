@@ -32,11 +32,21 @@ extern "C" {
     /** @brief Opaque barrack identifier */
     typedef uint16_t BuildingID;
 
+    /** @brief Flow field slot identifier (0–15; 0xFF = none) */
+    typedef uint8_t FlowFieldID;
+
+    /** @brief Sector identifier */
+    typedef uint16_t SectorID;
+
     /** @brief Opaque simulation context handle */
     typedef struct PatikaContext *PatikaHandle;
 
     PATIKA_API extern const uint32_t PATIKA_INVALID_AGENT_ID;
     PATIKA_API extern const uint16_t PATIKA_INVALID_BARRACK_ID;
+
+    #define PATIKA_INVALID_FLOW_FIELD_ID ((FlowFieldID)0xFF)
+    #define PATIKA_MAX_FLOW_FIELDS       16
+    #define PATIKA_INVALID_SECTOR_ID     ((SectorID)0xFFFF)
 
     #ifdef __cplusplus
 }
