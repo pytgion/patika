@@ -21,6 +21,13 @@
 #define PATIKA_INTERNAL_LOG_WARN(fmt, ...) PATIKA_LOG_WARN("[CORE] " fmt, ##__VA_ARGS__)
 #define PATIKA_INTERNAL_LOG_ERROR(fmt, ...) PATIKA_LOG_ERROR("[CORE] " fmt, ##__VA_ARGS__)
 
+/* -------------------------------------------------------------------------
+ * Shared direction tables (used by pathfinding)
+ * ------------------------------------------------------------------------- */
+
+static const int HEX_DIRS[6][2]  = {{1,0},{1,-1},{0,-1},{-1,0},{-1,1},{0,1}};
+static const int RECT_DIRS[4][2] = {{1,0},{-1,0},{0,1},{0,-1}};
+
 typedef struct MPSCCommandQueue MPSCCommandQueue;
 typedef struct SPSCEventQueue SPSCEventQueue;
 typedef struct AgentSlot AgentSlot;
@@ -198,6 +205,25 @@ static inline int map_is_tile_occupied(uint32_t grid_value) {
 static inline int map_is_tile_empty(uint32_t grid_value) {
     return map_extract_agent_id(grid_value) == PATIKA_INVALID_AGENT_ID;
 }
+
+/* -------------------------------------------------------------------------
+ * A* path node (used in pathfinding scratch buffer)
+ *
+ * state: 0=unvisited  1=open  2=closed
+ * parent: flat index of predecessor; start node points to itself.
+ * ------------------------------------------------------------------------- */
+
+#define ASTAR_UNVISITED 0
+#define ASTAR_OPEN      1
+#define ASTAR_CLOSED    2
+
+typedef struct {
+    int32_t  g;
+    int32_t  f;
+    uint32_t parent;
+    uint8_t  state;
+} PathNode;
+
 struct PCG32
 {
     uint64_t state;
@@ -241,6 +267,13 @@ struct PatikaContext
     _Atomic uint64_t version;
     PCG32 rng;
     PatikaStats stats;
+
+    /* Pre-allocated A* scratch — avoids per-agent malloc every tick.
+     * Must use map->width * map->height (not config values) because hex
+     * map_init converts the radius into a diameter for its tile array. */
+    PathNode *astar_nodes;
+    uint32_t *astar_heap;
+    uint32_t  astar_grid_size;
 };
 void process_command(struct PatikaContext *ctx, const PatikaCommand *cmd);
 

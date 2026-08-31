@@ -5,6 +5,8 @@
 // safe absolute for int32_t
 #define ABS_I32(x) ((x) < 0 ? -(x) : (x))
 
+static inline int32_t map_get_radius(MapGrid *map);
+
 void map_init(MapGrid *map, uint8_t type, uint32_t width, uint32_t height)
 {
     map->type = type;

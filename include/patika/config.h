@@ -22,6 +22,7 @@ extern "C" {
         uint32_t command_queue_size; /**< MPSC command queue capacity */
         uint32_t event_queue_size;   /**< SPSC event queue capacity */
         uint64_t rng_seed;           /**< RNG seed */
+        uint32_t max_path_nodes;     /**< A* node-expansion budget per agent per tick (0 = grid_width * grid_height) */
     } PatikaConfig;
 
     #ifdef __cplusplus

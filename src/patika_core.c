@@ -45,6 +45,20 @@ PATIKA_API PatikaHandle patika_create(const PatikaConfig *config)
 
     memset(&ctx->stats, 0, sizeof(PatikaStats));
 
+    /* Pre-allocate A* scratch to avoid per-agent malloc every tick.
+     * Must use map->width * map->height (not config values) because hex
+     * map_init converts the radius into a diameter for its tile array. */
+    ctx->astar_grid_size = ctx->map.width * ctx->map.height;
+    ctx->astar_nodes = calloc(ctx->astar_grid_size, sizeof(PathNode));
+    ctx->astar_heap  = malloc(ctx->astar_grid_size * sizeof(uint32_t));
+    if (!ctx->astar_nodes || !ctx->astar_heap) {
+        PATIKA_LOG_ERROR("Failed to allocate A* scratch buffers");
+        free(ctx->astar_nodes);
+        free(ctx->astar_heap);
+        patika_destroy(ctx);
+        return NULL;
+    }
+
     return ctx;
 }
 
@@ -63,6 +77,8 @@ PATIKA_API void patika_destroy(PatikaHandle handle)
     free(handle->snapshots[1].agents);
     free(handle->snapshots[0].barracks);
     free(handle->snapshots[1].barracks);
+    free(handle->astar_nodes);
+    free(handle->astar_heap);
 
     free(handle);
 }
