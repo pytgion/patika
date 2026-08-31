@@ -1,7 +1,5 @@
 #include "unity.h"
 #include "patika.h"
-#include <stdlib.h>
-#include <string.h>
 
 static PatikaHandle ctx = NULL;
 
@@ -28,61 +26,46 @@ void tearDown(void) {
     }
 }
 
+static PatikaCommand make_add_agent(int32_t q, int32_t r) {
+    PatikaCommand cmd = {0};
+    cmd.type = CMD_ADD_AGENT;
+    cmd.add_agent.start_q = q;
+    cmd.add_agent.start_r = r;
+    cmd.add_agent.group = 0;
+    cmd.add_agent.team = 0;
+    cmd.add_agent.parent_barrack = PATIKA_INVALID_BARRACK_ID;
+    cmd.add_agent.out_agent_id = NULL;
+    return cmd;
+}
+
 void test_spawn_50_agents(void) {
     for (int i = 0; i < 50; i++) {
-        AddAgentPayload *payload = malloc(sizeof(AddAgentPayload));
         int q = (i % 10) - 5;
         int r = (i / 10) - 5;
-        payload->start_q = q;
-        payload->start_r = r;
-        payload->faction = 0;
-        payload->side = 0;
-        payload->parent_barrack = PATIKA_INVALID_BARRACK_ID;
-        payload->out_agent_id = NULL;
-        payload->collision_data.layer = 0;
-        payload->collision_data.collision_mask = 0;
-        payload->collision_data.aggression_mask = 0;
-        
-        PatikaCommand cmd = {0};
-        cmd.type = CMD_ADD_AGENT;
-        cmd.large_command.payload = payload;
-        
+        PatikaCommand cmd = make_add_agent(q, r);
         PatikaError err = patika_submit_command(ctx, &cmd);
         TEST_ASSERT_EQUAL(PATIKA_OK, err);
     }
-    
+
     patika_tick(ctx);
-    
+
     const PatikaSnapshot *snap = patika_get_snapshot(ctx);
     TEST_ASSERT_EQUAL(50, snap->agent_count);
-    
+
     PatikaStats stats = patika_get_stats(ctx);
     TEST_ASSERT_EQUAL(50, stats.active_agents);
 }
 
 void test_batch_commands(void) {
     for (int i = 0; i < 10; i++) {
-        AddAgentPayload *payload = malloc(sizeof(AddAgentPayload));
-        payload->start_q = i;
-        payload->start_r = 0;
-        payload->faction = 0;
-        payload->side = 0;
-        payload->parent_barrack = PATIKA_INVALID_BARRACK_ID;
-        payload->out_agent_id = NULL;
-        payload->collision_data.layer = 0;
-        payload->collision_data.collision_mask = 0;
-        payload->collision_data.aggression_mask = 0;
-        
-        PatikaCommand cmd = {0};
-        cmd.type = CMD_ADD_AGENT;
-        cmd.large_command.payload = payload;
+        PatikaCommand cmd = make_add_agent(i, 0);
         patika_submit_command(ctx, &cmd);
     }
-    
+
     patika_tick(ctx);
-    
+
     const PatikaSnapshot *snap = patika_get_snapshot(ctx);
-    
+
     PatikaCommand cmds[10];
     for (int i = 0; i < 10; i++) {
         cmds[i].type = CMD_SET_GOAL;
@@ -90,74 +73,46 @@ void test_batch_commands(void) {
         cmds[i].set_goal.goal_q = 10;
         cmds[i].set_goal.goal_r = 10;
     }
-    
+
     PatikaError err = patika_submit_commands(ctx, cmds, 10);
     TEST_ASSERT_EQUAL(PATIKA_OK, err);
-    
+
     patika_tick(ctx);
 }
 
 void test_rapid_spawn_destroy(void) {
     for (int iter = 0; iter < 10; iter++) {
         for (int i = 0; i < 20; i++) {
-            AddAgentPayload *payload = malloc(sizeof(AddAgentPayload));
-            payload->start_q = i % 5;
-            payload->start_r = i / 5;
-            payload->faction = 0;
-            payload->side = 0;
-            payload->parent_barrack = PATIKA_INVALID_BARRACK_ID;
-            payload->out_agent_id = NULL;
-            payload->collision_data.layer = 0;
-            payload->collision_data.collision_mask = 0;
-            payload->collision_data.aggression_mask = 0;
-            
-            PatikaCommand cmd = {0};
-            cmd.type = CMD_ADD_AGENT;
-            cmd.large_command.payload = payload;
+            PatikaCommand cmd = make_add_agent(i % 5, i / 5);
             patika_submit_command(ctx, &cmd);
         }
-        
+
         patika_tick(ctx);
-        
+
         const PatikaSnapshot *snap = patika_get_snapshot(ctx);
-        
         for (uint32_t i = 0; i < snap->agent_count; i++) {
             PatikaCommand cmd = {0};
             cmd.type = CMD_REMOVE_AGENT;
             cmd.remove_agent.agent_id = snap->agents[i].id;
             patika_submit_command(ctx, &cmd);
         }
-        
+
         patika_tick(ctx);
     }
-    
+
     const PatikaSnapshot *snap = patika_get_snapshot(ctx);
     TEST_ASSERT_EQUAL(0, snap->agent_count);
 }
 
 void test_agent_movement_simulation(void) {
     for (int i = 0; i < 5; i++) {
-        AddAgentPayload *payload = malloc(sizeof(AddAgentPayload));
-        payload->start_q = 0;
-        payload->start_r = 0;
-        payload->faction = 0;
-        payload->side = 0;
-        payload->parent_barrack = PATIKA_INVALID_BARRACK_ID;
-        payload->out_agent_id = NULL;
-        payload->collision_data.layer = 0;
-        payload->collision_data.collision_mask = 0;
-        payload->collision_data.aggression_mask = 0;
-        
-        PatikaCommand cmd = {0};
-        cmd.type = CMD_ADD_AGENT;
-        cmd.large_command.payload = payload;
+        PatikaCommand cmd = make_add_agent(0, 0);
         patika_submit_command(ctx, &cmd);
     }
-    
+
     patika_tick(ctx);
-    
+
     const PatikaSnapshot *snap = patika_get_snapshot(ctx);
-    
     for (uint32_t i = 0; i < snap->agent_count; i++) {
         PatikaCommand cmd = {0};
         cmd.type = CMD_SET_GOAL;
@@ -166,41 +121,27 @@ void test_agent_movement_simulation(void) {
         cmd.set_goal.goal_r = 10;
         patika_submit_command(ctx, &cmd);
     }
-    
+
     for (int t = 0; t < 20; t++) {
         patika_tick(ctx);
     }
-    
+
     snap = patika_get_snapshot(ctx);
     TEST_ASSERT_EQUAL(5, snap->agent_count);
 }
 
 void test_queue_capacity(void) {
-    AddAgentPayload *payload = malloc(sizeof(AddAgentPayload));
-    payload->start_q = 0;
-    payload->start_r = 0;
-    payload->faction = 0;
-    payload->side = 0;
-    payload->parent_barrack = PATIKA_INVALID_BARRACK_ID;
-    payload->out_agent_id = NULL;
-    payload->collision_data.layer = 0;
-    payload->collision_data.collision_mask = 0;
-    payload->collision_data.aggression_mask = 0;
-    
-    PatikaCommand cmd = {0};
-    cmd.type = CMD_ADD_AGENT;
-    cmd.large_command.payload = payload;
+    PatikaCommand cmd = make_add_agent(0, 0);
     patika_submit_command(ctx, &cmd);
-    
     patika_tick(ctx);
-    
+
     const PatikaSnapshot *snap = patika_get_snapshot(ctx);
     AgentID agent_id = snap->agents[0].id;
-    
+
     PatikaCommand goal_cmd = {0};
     goal_cmd.type = CMD_SET_GOAL;
     goal_cmd.set_goal.agent_id = agent_id;
-    
+
     int success = 0;
     for (int i = 0; i < 2000; i++) {
         goal_cmd.set_goal.goal_q = i;
@@ -209,31 +150,18 @@ void test_queue_capacity(void) {
             success++;
         }
     }
-    
+
     TEST_ASSERT_TRUE(success > 0);
 }
 
 void test_stats_tracking(void) {
-    AddAgentPayload *payload = malloc(sizeof(AddAgentPayload));
-    payload->start_q = 0;
-    payload->start_r = 0;
-    payload->faction = 0;
-    payload->side = 0;
-    payload->parent_barrack = PATIKA_INVALID_BARRACK_ID;
-    payload->out_agent_id = NULL;
-    payload->collision_data.layer = 0;
-    payload->collision_data.collision_mask = 0;
-    payload->collision_data.aggression_mask = 0;
-    
-    PatikaCommand cmd = {0};
-    cmd.type = CMD_ADD_AGENT;
-    cmd.large_command.payload = payload;
+    PatikaCommand cmd = make_add_agent(0, 0);
     patika_submit_command(ctx, &cmd);
-    
+
     for (int i = 0; i < 5; i++) {
         patika_tick(ctx);
     }
-    
+
     PatikaStats stats = patika_get_stats(ctx);
     TEST_ASSERT_EQUAL(5, stats.total_ticks);
     TEST_ASSERT_TRUE(stats.commands_processed > 0);
@@ -241,38 +169,25 @@ void test_stats_tracking(void) {
 
 void test_snapshot_consistency(void) {
     for (int i = 0; i < 3; i++) {
-        AddAgentPayload *payload = malloc(sizeof(AddAgentPayload));
-        payload->start_q = i;
-        payload->start_r = i;
-        payload->faction = 0;
-        payload->side = 0;
-        payload->parent_barrack = PATIKA_INVALID_BARRACK_ID;
-        payload->out_agent_id = NULL;
-        payload->collision_data.layer = 0;
-        payload->collision_data.collision_mask = 0;
-        payload->collision_data.aggression_mask = 0;
-        
-        PatikaCommand cmd = {0};
-        cmd.type = CMD_ADD_AGENT;
-        cmd.large_command.payload = payload;
+        PatikaCommand cmd = make_add_agent(i, i);
         patika_submit_command(ctx, &cmd);
     }
-    
+
     patika_tick(ctx);
-    
+
     const PatikaSnapshot *snap1 = patika_get_snapshot(ctx);
     uint64_t v1 = snap1->version;
     uint32_t count1 = snap1->agent_count;
-    
+
     const PatikaSnapshot *snap2 = patika_get_snapshot(ctx);
-    
+
     TEST_ASSERT_EQUAL(v1, snap2->version);
     TEST_ASSERT_EQUAL(count1, snap2->agent_count);
 }
 
 void test_rectangular_map(void) {
     patika_destroy(ctx);
-    
+
     PatikaConfig config = {
         .grid_type = MAP_TYPE_RECTANGULAR,
         .max_agents = 100,
@@ -286,31 +201,17 @@ void test_rectangular_map(void) {
     };
     ctx = patika_create(&config);
     TEST_ASSERT_NOT_NULL(ctx);
-    
-    AddAgentPayload *payload = malloc(sizeof(AddAgentPayload));
-    payload->start_q = 10;
-    payload->start_r = 10;
-    payload->faction = 0;
-    payload->side = 0;
-    payload->parent_barrack = PATIKA_INVALID_BARRACK_ID;
-    payload->out_agent_id = NULL;
-    payload->collision_data.layer = 0;
-    payload->collision_data.collision_mask = 0;
-    payload->collision_data.aggression_mask = 0;
-    
-    PatikaCommand cmd = {0};
-    cmd.type = CMD_ADD_AGENT;
-    cmd.large_command.payload = payload;
-    
+
+    PatikaCommand cmd = make_add_agent(10, 10);
     PatikaError err = patika_submit_command(ctx, &cmd);
     TEST_ASSERT_EQUAL(PATIKA_OK, err);
-    
+
     patika_tick(ctx);
 }
 
 int main(void) {
     UNITY_BEGIN();
-    
+
     RUN_TEST(test_spawn_50_agents);
     RUN_TEST(test_batch_commands);
     RUN_TEST(test_rapid_spawn_destroy);
@@ -319,6 +220,6 @@ int main(void) {
     RUN_TEST(test_stats_tracking);
     RUN_TEST(test_snapshot_consistency);
     RUN_TEST(test_rectangular_map);
-    
+
     return UNITY_END();
 }

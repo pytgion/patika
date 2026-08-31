@@ -40,8 +40,8 @@ void test_cmd_add_agent_basic(void)
     cmd.type = CMD_ADD_AGENT;
     cmd.add_agent.start_q = 0;
     cmd.add_agent.start_r = 0;
-    cmd.add_agent.faction = 1;
-    cmd.add_agent.side = 2;
+    cmd.add_agent.group = 1;
+    cmd.add_agent.team = 2;
     cmd.add_agent.parent_barrack = PATIKA_INVALID_BARRACK_ID;
     cmd.add_agent.out_agent_id = &id;
 
@@ -63,8 +63,8 @@ void test_cmd_add_agent_multiple(void)
         cmd.type = CMD_ADD_AGENT;
         cmd.add_agent.start_q = i;
         cmd.add_agent.start_r = 0;
-        cmd.add_agent.faction = 1;
-        cmd.add_agent.side = 1;
+        cmd.add_agent.group = 1;
+        cmd.add_agent.team = 1;
         cmd.add_agent.out_agent_id = &ids[i];
 
         patika_submit_command(handle, &cmd);
@@ -91,8 +91,8 @@ void test_cmd_add_agent_verify_snapshot(void)
     cmd.type = CMD_ADD_AGENT;
     cmd.add_agent.start_q = 3;
     cmd.add_agent.start_r = -2;
-    cmd.add_agent.faction = 5;
-    cmd.add_agent.side = 7;
+    cmd.add_agent.group = 5;
+    cmd.add_agent.team = 7;
     cmd.add_agent.out_agent_id = &id;
 
     patika_submit_command(handle, &cmd);
@@ -106,8 +106,8 @@ void test_cmd_add_agent_verify_snapshot(void)
     TEST_ASSERT_EQUAL(id, agent->id);
     TEST_ASSERT_EQUAL_INT32(3, agent->pos_q);
     TEST_ASSERT_EQUAL_INT32(-2, agent->pos_r);
-    TEST_ASSERT_EQUAL_UINT8(5, agent->faction);
-    TEST_ASSERT_EQUAL_UINT8(7, agent->side);
+    TEST_ASSERT_EQUAL_UINT8(5, agent->group);
+    TEST_ASSERT_EQUAL_UINT8(7, agent->team);
 }
 
 // ============================================================================
@@ -195,8 +195,8 @@ void test_cmd_add_barrack(void)
     cmd.type = CMD_ADD_BARRACK;
     cmd.add_barrack.pos_q = 2;
     cmd.add_barrack.pos_r = 3;
-    cmd.add_barrack.faction = 1;
-    cmd.add_barrack.side = 1;
+    cmd.add_barrack.group = 1;
+    cmd.add_barrack.team = 1;
     cmd.add_barrack.patrol_radius = 5;
     cmd.add_barrack.max_agents = 20;
     cmd.add_barrack.out_barrack_id = &id;
@@ -212,7 +212,7 @@ void test_cmd_add_barrack(void)
     BarrackSnapshot *barrack = &snap->barracks[0];
     TEST_ASSERT_EQUAL_INT32(2, barrack->pos_q);
     TEST_ASSERT_EQUAL_INT32(3, barrack->pos_r);
-    TEST_ASSERT_EQUAL_UINT8(1, barrack->faction);
+    TEST_ASSERT_EQUAL_UINT8(1, barrack->group);
     TEST_ASSERT_EQUAL_UINT8(5, barrack->patrol_radius);
 }
 

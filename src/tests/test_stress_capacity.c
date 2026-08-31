@@ -155,8 +155,8 @@ void test_max_barrack_capacity(void)
         cmd.type = CMD_ADD_BARRACK;
         cmd.add_barrack.pos_q = i % 10;
         cmd.add_barrack.pos_r = i / 10;
-        cmd.add_barrack.faction = 1;
-        cmd.add_barrack.side = 1;
+        cmd.add_barrack.group = 1;
+        cmd.add_barrack.team = 1;
         cmd.add_barrack.patrol_radius = 3;
         cmd.add_barrack.max_agents = 10;
         cmd.add_barrack.out_barrack_id = &ids[i];
@@ -182,8 +182,8 @@ void test_agents_per_barrack_limit(void)
     cmd.type = CMD_ADD_BARRACK;
     cmd.add_barrack.pos_q = 0;
     cmd.add_barrack.pos_r = 0;
-    cmd.add_barrack.faction = 1;
-    cmd.add_barrack.side = 1;
+    cmd.add_barrack.group = 1;
+    cmd.add_barrack.team = 1;
     cmd.add_barrack.patrol_radius = 5;
     cmd.add_barrack.max_agents = 20;
     cmd.add_barrack.out_barrack_id = &barrack_id;

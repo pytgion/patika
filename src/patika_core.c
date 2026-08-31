@@ -1,5 +1,3 @@
-#include "../include/patika.h"
-#include "../include/patika/patika_log.h"
 #include "internal/patika_internal.h"
 #include <stdlib.h>
 #include <string.h>
@@ -124,21 +122,32 @@ PATIKA_API void patika_tick(PatikaHandle handle)
     {
         AgentSlot *agent = &handle->agents.slots[i];
         if (!agent->active)
-        {
             continue;
-        }
-        PATIKA_LOG_WARN("AGENT BEHAVIOUR IS : %d",agent->behavior);
-        PATIKA_LOG_WARN("AGENT STATE IS : %d",agent->state);
 
-        if (agent->state == STATE_CALCULATING)
-        { // WAITING_FOR_CALC
-            PATIKA_LOG_WARN("Agent state calculating...");
+        if (agent->state == STATE_REMOVE_QUEUE)
+        {
+            map_set_agent_grid(&handle->map, agent->pos_q, agent->pos_r, PATIKA_INVALID_AGENT_ID);
+            PatikaEvent evt = {EVENT_AGENT_REMOVED, agent->id, agent->pos_q, agent->pos_r};
+            spsc_push(&handle->event_queue, &evt);
+            agent_pool_free(&handle->agents, agent->id);
+            handle->stats.active_agents--;
+        }
+        else if (agent->state == STATE_CALCULATING)
+        {
             compute_next_step(handle, agent);
+            /* Complete the move in the same tick so agents advance one tile per tick. */
+            if (agent->state == STATE_MOVING)
+                process_movement(handle, agent);
         }
         else if (agent->state == STATE_MOVING)
         {
-            PATIKA_LOG_WARN("Agent state moving....");
             process_movement(handle, agent);
+        }
+        else if (agent->state == STATE_IDLE && agent->behavior == BEHAVIOR_PATROL)
+        {
+            compute_patrol(handle, agent);
+            if (agent->state == STATE_MOVING)
+                process_movement(handle, agent);
         }
     }
 
@@ -182,44 +191,4 @@ PATIKA_API PatikaStats patika_get_stats(PatikaHandle handle)
         return empty;
     }
     return handle->stats;
-}
-
-
-PATIKA_API PatikaError patika_add_agent_sync(PatikaHandle handle,
-                                             int32_t start_q,
-                                             int32_t start_r,
-                                             uint8_t faction,
-                                             uint8_t side,
-                                             BuildingID parent_barrack,
-                                             AgentID *id_output)
-{
-    if (!handle)
-        return PATIKA_ERR_NULL_HANDLE;
-
-    AddAgentPayload *payload = (AddAgentPayload*)malloc(sizeof(AddAgentPayload));
-    if (!payload)
-    {
-        return PATIKA_ERR_INVALID_COMMAND_TYPE;
-    }
-
-    payload->start_q = start_q;
-    payload->start_r = start_r;
-    payload->faction = faction;
-    payload->side = side;
-    payload->parent_barrack = parent_barrack;
-    payload->out_agent_id = id_output;
-
-    PatikaCommand cmd = {0};
-    cmd.type = CMD_ADD_AGENT;
-    cmd.large_command.payload = payload;
-
-    PatikaError err = patika_submit_command(handle, &cmd);
-
-    // fucked up situation, evacuate the data
-    if (err != PATIKA_OK)
-    {
-        free(payload);
-    }
-
-    return err;
 }

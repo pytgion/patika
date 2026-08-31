@@ -14,10 +14,7 @@
 #define PATIKA_AGENT_DEFAULT_VIEW_RADIUS 1
 
 #define AGENT_GRID_RESERVED_BIT  0x80000000  // Bit 31
-#define AGENT_GRID_OCCUPIED_BIT  0x40000000  // Bit 30 (future use)
 #define AGENT_GRID_AGENT_MASK    0x0000FFFF  // Lower 16 bits
-
-#define AGENT_PROGRESS_MAX_DISTANCE 10000
 
 #define PATIKA_INTERNAL_LOG_DEBUG(fmt, ...) PATIKA_LOG_DEBUG("[CORE] " fmt, ##__VA_ARGS__)
 #define PATIKA_INTERNAL_LOG_INFO(fmt, ...) PATIKA_LOG_INFO("[CORE] " fmt, ##__VA_ARGS__)
@@ -75,13 +72,6 @@ typedef struct {
     int32_t last_target_q, last_target_r;
 } ExploreData;
 
-typedef struct {
-    int32_t *guard_tiles_q;
-    int32_t *guard_tiles_r;
-    uint16_t tile_count;
-    uint16_t tile_capacity;
-} GuardData;
-
 // TODO: consider optimizing for cache friendly structure
 struct AgentSlot
 {
@@ -90,10 +80,8 @@ struct AgentSlot
     int32_t target_q, target_r;
     AgentID id;
     BuildingID parent_barrack;
-    AgentInteraction interaction_data;
 
     uint16_t generation;
-    uint16_t progress; // 0-10000
     uint16_t view_radius;
     uint16_t speed; // tick based
     uint16_t next_free_index;
@@ -101,14 +89,13 @@ struct AgentSlot
     PatikaCollisionData collision_data;
     uint8_t state;
     uint8_t behavior;
-    uint8_t faction;
-    uint8_t side;
+    uint8_t group;
+    uint8_t team;
     uint8_t active;
 
     union {
         PatrolData patrol;
         ExploreData explore;
-        GuardData guard;
     } behavior_data;
 
 };
@@ -146,8 +133,8 @@ struct BarrackSlot
 {
     BuildingID id;
     uint8_t active;
-    uint8_t faction;
-    uint8_t side;
+    uint8_t group;
+    uint8_t team;
     uint8_t state;
     AgentBehavior behavior;
     uint8_t patrol_radius;
@@ -183,7 +170,7 @@ struct MapGrid
     MapTile *tiles;
     uint32_t width;
     uint32_t height;
-    AgentID *agent_grid; // why the fuck is it there??
+    AgentID *agent_grid; // per-tile reservation/occupancy — see AGENT_GRID_* bits
 };
 
 void map_init(MapGrid *map, uint8_t type, uint32_t width, uint32_t height);
@@ -226,12 +213,6 @@ uint32_t pcg32_next(PCG32 *rng);
  * @return 0 if can enter (no collision), non-zero if blocked
  */
 int can_agent_enter(const AgentSlot *agent_A, const AgentSlot *agent_B);
-
-/**
- * @brief Check if agent A should attack agent B (aggression check)
- * @return 0 if should attack, non-zero if ignore
- */
-int should_agent_attack(const AgentSlot *agent_A, const AgentSlot *agent_B);
 
 /**
  * @brief Try to reserve a tile for agent movement

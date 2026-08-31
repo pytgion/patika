@@ -149,8 +149,8 @@ static void *stress_producer(void *arg)
         cmd.type = CMD_ADD_AGENT;
         cmd.add_agent.start_q = args->thread_id;
         cmd.add_agent.start_r = i % 10;
-        cmd.add_agent.faction = args->thread_id % 2;
-        cmd.add_agent.side = 1;
+        cmd.add_agent.group = args->thread_id % 2;
+        cmd.add_agent.team = 1;
 
         // Retry on full queue with backoff
         int retries = 0;

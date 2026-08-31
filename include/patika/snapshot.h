@@ -7,53 +7,41 @@
 
 #ifdef __cplusplus
 extern "C" {
-    #endif
+#endif
 
-    /**
-     * @brief Per-agent snapshot data
-     */
     typedef struct
     {
-        AgentID id;
+        AgentID       id;
         AgentBehavior behavior;
-        AgentState state;
-        uint8_t faction;
-        uint8_t side;
-        BuildingID parent_barrack;
-        int32_t pos_q, pos_r;
-        int32_t next_q, next_r;
-        int32_t target_q, target_r;
+        AgentState    state;
+        uint8_t       group;
+        uint8_t       team;
+        BuildingID    parent_barrack;
+        int32_t       pos_q, pos_r;
+        int32_t       next_q, next_r;
+        int32_t       target_q, target_r;
     } AgentSnapshot;
 
-    /**
-     * @brief Per-barrack snapshot data
-     */
     typedef struct
     {
         BuildingID id;
-        uint8_t faction;
-        uint8_t side;
-        uint8_t state;
-        int32_t pos_q, pos_r;
-        uint8_t patrol_radius;
-        uint16_t agent_count;
+        uint8_t    group;
+        uint8_t    team;
+        uint8_t    state;
+        int32_t    pos_q, pos_r;
+        uint8_t    patrol_radius;
+        uint16_t   agent_count;
     } BarrackSnapshot;
 
-    /**
-     * @brief Consistent snapshot view of the world
-     */
     typedef struct
     {
-        AgentSnapshot *agents;
-        uint32_t agent_count;
+        AgentSnapshot   *agents;
+        uint32_t         agent_count;
         BarrackSnapshot *barracks;
-        uint16_t barrack_count;
-        uint64_t version;
+        uint16_t         barrack_count;
+        uint64_t         version;
     } PatikaSnapshot;
 
-    /**
-     * @brief Runtime statistics
-     */
     typedef struct
     {
         uint64_t total_ticks;
@@ -65,7 +53,7 @@ extern "C" {
         uint32_t active_barracks;
     } PatikaStats;
 
-    #ifdef __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

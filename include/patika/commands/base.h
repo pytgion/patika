@@ -3,14 +3,11 @@
 
 #include "../types.h"
 #include "../enums.h"
+#include "agent.h"
+#include "barrack.h"
 
-// inline command size threshold (32 bytes)
-#define PATIKA_INLINE_COMMAND_SIZE 32
+#define PATIKA_INLINE_COMMAND_SIZE 56
 
-/**
- * @brief Base command structure
- * @details Commands ≤32 bytes use inline storage, larger ones use payload pointer
- */
 typedef struct PatikaCommand
 {
     CommandType type;
@@ -28,14 +25,9 @@ typedef struct PatikaCommand
         } set_goal;
 
         struct {
-            AgentID agent_id;
-            int32_t tile_q, tile_r;
-        } add_guard_tile;
-
-        struct {
-            BuildingID barrack_id;
-            int32_t tile_q, tile_r;
-        } add_barrack_guard_tile;
+            AgentID    agent_id;
+            AgentBehavior behavior;
+        } set_behavior;
 
         struct {
             int32_t q, r;
@@ -43,21 +35,12 @@ typedef struct PatikaCommand
         } set_tile;
 
         struct {
-            AgentID agent_id;
             BuildingID barrack_id;
-        } bind_barrack;
+        } remove_barrack;
 
-        struct {
-            AgentID agent_id;
-        } compute_next;
-
-        struct {
-            BuildingID barrack_id;
-        } clear_barrack_guard_tiles;
-
-        struct {
-            void *payload;
-        } large_command;
+        AddAgentPayload             add_agent;
+        AddAgentWithBehaviorPayload add_agent_with_behavior;
+        AddBarrackPayload           add_barrack;
     };
 } PatikaCommand;
 
