@@ -156,15 +156,19 @@ if(PATIKA_BUILD_TESTS)
     # add_patika_test(test_spsc_queue)
     # add_patika_test(test_rng)
     # add_patika_test(test_commands)
-    # add_patika_test(test_pathfinding)
-    
+    add_patika_test(test_pathfinding)
+
     # Integration Tests
     add_patika_test(test_integration_basic)
     add_patika_test(test_integration_multi_agent)
-    
+
     # Stress Tests
+    add_patika_test(test_stress)
     # add_patika_test(test_stress_queues)
     # add_patika_test(test_stress_capacity)
+
+    # Benchmark (not run by default via ctest; invoke the binary directly)
+    add_patika_test(test_benchmark)
     
     message(STATUS "Tests enabled - run with: ctest --output-on-failure")
 endif()
