@@ -149,12 +149,13 @@ if(PATIKA_BUILD_TESTS)
     endfunction()
     
     # Unit Tests
-    # add_patika_test(test_agent_pool)
-    # add_patika_test(test_barrack_pool)
-    # add_patika_test(test_map)
-    # add_patika_test(test_mpsc_queue)
+    add_patika_test(test_agent_pool)
+    add_patika_test(test_barrack_pool)
+    add_patika_test(test_map)
+    add_patika_test(test_mpsc_queue)
+    add_patika_test(test_rng)
+    # Stale expectations against the current API — see ROADMAP.md
     # add_patika_test(test_spsc_queue)
-    # add_patika_test(test_rng)
     # add_patika_test(test_commands)
     add_patika_test(test_pathfinding)
 

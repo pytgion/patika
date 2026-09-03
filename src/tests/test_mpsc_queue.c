@@ -163,8 +163,8 @@ static void *producer_thread(void *arg)
 
 void test_mpsc_multiple_producers(void)
 {
-    const int NUM_PRODUCERS = 4;
-    const int CMDS_PER_PRODUCER = 50;
+    /* enum, not const int — array sizes must be integer constant expressions */
+    enum { NUM_PRODUCERS = 4, CMDS_PER_PRODUCER = 50 };
 
     pthread_t threads[NUM_PRODUCERS];
     ProducerArgs args[NUM_PRODUCERS];
