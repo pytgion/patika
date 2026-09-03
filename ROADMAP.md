@@ -1,202 +1,138 @@
 # Patika: Roadmap
-## Authoritative Server-Side Pathfinding and Agent Coordination Library
+
+*Verified against the working tree, 2026-09-04 — every row checked against the source
+or produced by running the binaries.*
 
 ---
 
 ## What This Is
 
-A C library for running many moving agents on a grid, server-side. You tick it, it moves agents, it emits events. No engine dependency, no runtime, stable C ABI.
+A C library for running many moving agents on a grid, server-side. You tick it, it
+moves agents, it emits events. Links as a standalone library with a stable C ABI.
 
-Target users: game backends (MMOs, strategy, tower defense, RTS), headless simulations, any server that needs to move things around a map without shipping a full engine.
+Target users: game backends (MMOs, strategy, tower defense, RTS) and headless
+simulations.
 
 ---
 
-## Current State (What Actually Exists)
+## Current State
 
 | Area | Status |
 |---|---|
-| Build | Compiles, `agent_grid` is present — needs verification on clean build |
-| Core tick loop | Works: commands → tick → events → snapshot |
-| Agent pool | Generational IDs, pool allocator — correct |
-| Command queue (MPSC) | **Race condition** — head advanced before slot written |
-| Pathfinding | **Greedy hill-climb, hex only** — fails at concave obstacles, no rectangular support |
-| Rectangular grid | Config supports it, pathfinding ignores it — only `HEX_DIRS` in `compute_next_step` |
-| `compute_patrol` | Implemented but **never called from tick loop** |
-| `CMD_SET_BEHAVIOR` | In enum, hits `default: WARN` |
-| `CMD_REMOVE_BARRACK` | Stub, explicit WARN logged |
-| Guard tile commands (7–10, 13–16) | Stub, all hit `default: WARN` |
-| Building commands (17–18) | Stub, all hit `default: WARN` |
-| FLEE / GUARD behaviors | Silent fallback to IDLE |
-| `ADD_AGENT` payload | Heap-allocated, freed inside `process_command` — fragile |
-| Double-buffered snapshots | Correct |
-| SPSC event queue | Correct |
-| PCG32 RNG | Correct |
-| Map load (`patika_load_map`) | Works |
+| Build | ✅ Warning-free at `-Wall -Wextra -Wpedantic` |
+| Core tick loop | ✅ commands → tick → events → snapshot |
+| Agent pool | ✅ Generational IDs, pool allocator |
+| Command queue (MPSC) | ✅ Slot written first, published via per-slot `ready` flag (release/acquire) |
+| Command payloads | ✅ Inline in the command union; no heap allocation crosses the queue |
+| Pathfinding | ✅ A\*, both grid types, concave obstacles handled |
+| Rectangular grid | ✅ 4-directional, Manhattan heuristic |
+| Hexagonal grid | ✅ 6-direction table, hex-distance heuristic |
+| Reservation-aware routing | ✅ Expansion treats tiles reserved this tick as blocked |
+| Path caching | ✅ Path walked across ticks, discarded on goal change |
+| Bounded search | ✅ `max_path_nodes` budget; exhaustion emits `EVENT_STUCK` |
+| `compute_patrol` | ✅ Called from the tick loop (`patika_core.c:162`) |
+| `CMD_SET_BEHAVIOR` | ✅ Implemented |
+| `CMD_REMOVE_BARRACK` | ✅ Implemented |
+| Dead enum values | ✅ Guard-tile, building, FLEE and GUARD entries removed |
+| Double-buffered snapshots | ✅ |
+| SPSC event queue | ✅ |
+| PCG32 RNG | ✅ Seeded, deterministic |
+| Map load (`patika_load_map`) | ✅ |
+| Thread-safety contract | ✅ Documented per function in `include/patika/api.h` |
+| Multiple concurrent handles | ✅ No shared mutable state except the log mutex |
+| Benchmark suite | ✅ 50/100/200 agents, numbers in the README |
+| Version header | ✅ `0.3.0` |
+| Test suites | ✅ 10 suites, 85 assertions; 4 files still disabled (§3) |
+| `tools/` visualizer | ❌ Stale and unreferenced by the build (§4) |
+| Flow fields / sectors | ➖ Cut from the public API until implemented; internal scaffolding kept |
+| Tick worst case | ⚠️ 42–208 ms under mass replanning (§2) |
+
+Phases 1–4 of the previous roadmap are complete. What follows is what is left.
 
 ---
 
 ## What Stays (Do Not Touch)
 
-- **Generational agent IDs** — correct for tracking agent lifecycle
+- **Generational agent IDs** — correct for tracking agent lifecycle across an FFI boundary
 - **Command/event queue split** — right model for a tick-based server
 - **Double-buffered snapshots** — clean reader/writer separation
 - **`PatikaConfig` + opaque handle** — good FFI boundary
 - **PCG32 seeded RNG** — deterministic tie-breaking
-- **Rectangular grid** — keep, make it primary
+- **Rectangular grid as primary** — hex stays supported
 
 ---
 
-## Phase 1 — Fix What's Broken
+## 1. Flow fields and sectors
 
-### 1.1 Fix the MPSC Race
+The public API used to declare four functions with no definition anywhere in `src/`
+(`patika_compute_flow_field`, `patika_free_flow_field`, `patika_rebuild_flow_field`,
+`patika_rebuild_sectors`), plus `CMD_SET_FLOW_FIELD`, which reached `process_command`'s
+`default:` branch. Calling any of them was a link error. They are now cut from
+`api.h`, `enums.h` and the command union.
 
-`mpsc_push` does `atomic_fetch_add` on head, then writes to the slot. Consumer can pop a slot before it's written.
-
-Fix: write slot data first, then flip a per-slot `ready` flag. Consumer checks `ready` before returning the entry. This is a one-file change in `patika_mpsc.c`.
-
-### 1.2 Inline All Command Payloads
-
-`CMD_ADD_AGENT` and `CMD_ADD_BARRACK` malloc a payload that `process_command` frees. This is fragile — if the queue fills up after push but before pop, the pointer is in limbo. It also makes the API awkward for callers.
-
-Fix: move all fields into the inline command union. The union is 32 bytes; `AddAgentPayload` fits. Remove `large_command.payload` entirely.
-
-### 1.3 Wire Patrol into the Tick Loop
-
-`compute_patrol` exists and works. The tick loop in `patika_core.c` never calls it.
-
-Fix: in the tick loop, after handling `STATE_CALCULATING` and `STATE_MOVING`, add a branch for `BEHAVIOR_PATROL` agents in `STATE_IDLE` — call `compute_patrol`, set `STATE_MOVING`.
-
-### 1.4 Verify Clean Build
-
-Confirm full build at `-Wall -Wextra` with zero warnings before moving on. Fix anything that surfaces.
-
-**Deliverable:** Correct command queue, no heap payloads, patrol works, clean build.
+Still present and still declaration-only, internal to the library:
+`flow_field_compute`, `flow_field_free`, `flow_field_get_dir`, `flow_field_step` in
+`src/internal/patika_internal.h`, along with `PatikaFlowField`, the `flow_fields[]`
+slots and `SectorGrid` in the context. `PatikaConfig.sector_size` is accepted and
+ignored. These are private, so they cost callers nothing; implement or remove them
+when §2 reaches step 3.
 
 ---
 
-## Phase 2 — Real Pathfinding
+## 2. Pathfinding tail latency
 
-### 2.1 A\* for Rectangular Grid
+200 agents on 256×256: 1.09 ms average, 207 ms worst (full table in the README). Every
+agent runs its own A\* against the same obstacle field and the cost is not spread
+across ticks.
 
-Replace greedy hill-climb with A\* for `MAP_TYPE_RECTANGULAR`. This is the primary grid type for game backends (tile maps, grid-based games).
+Cheapest first:
 
-The greedy approach fails at any concave obstacle — a wall with a corner, a room entrance, anything non-trivial. A\* handles all of these correctly.
+1. **Budget per tick rather than per agent.** Cap total node expansions across all
+   agents; unserved agents stay in `STATE_CALCULATING` and are served next tick.
+2. **Share paths between agents with the same goal.**
+3. **Flow fields.** The intended answer for many-agents-one-goal, worth building after
+   1 and 2 are measured.
 
-**Node pool:** heap-allocated per call on the server is fine. Size it from config (`max_path_length`). If budget exhausted before goal → `EVENT_STUCK` with the agent's current position. Honest failure.
-
-**Open set:** binary min-heap on f-cost.  
-**Closed set:** flat bitfield over grid cells.  
-**Heuristic:** Manhattan distance (4-directional) or Chebyshev (8-directional) — pick based on whether diagonal movement is supported.
-
-### 2.2 Keep Hex Grid Working
-
-Hex pathfinding should also become A\* using the existing `get_dist()` as the heuristic. The six-direction table stays.
-
-### 2.3 Connect Reservation Table to Pathfinding
-
-`compute_next_step` ignores `agent_grid` when picking the next tile. A\* node expansion must treat reserved tiles as temporarily blocked. This is what makes multi-agent movement not clip through each other.
-
-**Deliverable:** Agents navigate correctly around any obstacle on rectangular maps. `EVENT_STUCK` only fires on genuinely unreachable goals.
+Measure after each step; the benchmark exists, keep the README numbers current.
 
 ---
 
-## Phase 3 — API Cleanup
+## 3. Remaining disabled tests
 
-### 3.1 Cut or Implement Every Stub Command
+`test_agent_pool`, `test_barrack_pool`, `test_map`, `test_mpsc_queue` and `test_rng`
+are re-enabled — the suite is now 10 files and 85 assertions. Four files remain
+commented out in `CMakeLists.txt`:
 
-A command that silently does nothing is a bug from the caller's perspective. For each stub: implement it or remove it from the enum.
-
-**Implement:**
-- `CMD_SET_BEHAVIOR` — needed for runtime behavior changes
-- `CMD_REMOVE_BARRACK` — add inline field to command union, implement free
-
-**Remove from enum:**
-- `CMD_AGENT_ADD_GUARD_TILE` / `CMD_AGENT_REMOVE_GUARD_TILE` / `CMD_AGENT_CLEAR_GUARD_TILES`
-- `CMD_BARRACK_ADD_GUARD_TILE` / `CMD_BARRACK_REMOVE_GUARD_TILE` / `CMD_BARRACK_CLEAR_GUARD_TILES`
-- `CMD_ADD_BUILDING` / `CMD_REMOVE_BUILDING`
-
-If guard tiles become needed later, add them back with a real implementation.
-
-### 3.2 Remove FLEE and GUARD Behaviors
-
-Both silently fall back to IDLE. Remove from `AgentBehavior` enum. If either is needed in the future, it gets implemented, not stubbed.
-
-### 3.3 Remove Game-Specific Collision Fields
-
-`PatikaCollisionData.aggression_mask` — game concept, not relevant to movement coordination. Remove.
-
-`INTERACT_ATTACK`, `BUILDING_TOWER`, `BUILDING_TRAP`, `BUILDING_IMMUNITY` — remove from enums. A pathfinding library does not need these.
-
-`faction` / `side` on agent and barrack — keep but rename to `group` / `team`. Neutral naming, still useful for separating agent sets.
-
-### 3.4 Clean Up Source Comments
-
-Remove the inline profanity from `patika_internal.h:185` and `patika_core.c`. Fine in private notes, not in a library anyone else might read.
-
-### 3.5 Add Version Header
-
-```c
-// include/patika/version.h
-#define PATIKA_VERSION_MAJOR 0
-#define PATIKA_VERSION_MINOR 2
-#define PATIKA_VERSION_PATCH 0
-```
-
-**Deliverable:** Public API makes sense to someone who didn't write it. Zero silent stubs. No dead enum values.
+| Suite | State |
+|---|---|
+| `test_spsc_queue` | 2 failures, stale expectations: tests expect the old `-1` sentinel, `spsc_push`/`spsc_pop` now return `PatikaError` (`PATIKA_ERR_CAPACITY == 4`) |
+| `test_commands` | 1 failure: `test_cmd_set_goal` expects `STATE_MOVING` one tick after `CMD_SET_GOAL`, gets `STATE_CALCULATING`. Decide whether the extra tick is intended, then fix the test or the handler |
+| `test_stress_queues`, `test_stress_capacity` | Don't compile — call `patika_add_agent_sync`, removed. Port to `patika_submit_command` + `patika_tick`, or delete |
 
 ---
 
-## Phase 4 — Server Hardening
+## 4. Terminal visualizer
 
-### 4.1 Thread Safety Audit
+`tools/patika_vis.c` and `tools/vis_demo.c` render the live context to ANSI. Neither is
+referenced by `CMakeLists.txt`, so nothing builds them, and both have drifted out of
+sync with the library:
 
-The library is designed for multi-threaded use (MPSC queue, atomic snapshot index). Verify the actual guarantees:
+| File | Breakage |
+|---|---|
+| `vis_demo.c` | Builds commands through the removed heap-payload API (`cmd.large_command.payload`), and sets `faction` / `side` / `collision_data.aggression_mask`, all renamed or removed |
+| `patika_vis.c` | Switches on `BEHAVIOR_GUARD` and `BEHAVIOR_FLEE`, removed from the enum |
 
-- Multiple threads can call `patika_submit_command` concurrently — confirm MPSC is correct after Phase 1 fix
-- Only one thread calls `patika_tick` — document this constraint explicitly
-- `patika_get_snapshot` / `patika_poll_events` safe to call from any thread — confirm
-
-Document what is and isn't safe. Callers need to know.
-
-### 4.2 Multiple Concurrent Contexts
-
-Each `PatikaHandle` is independent — confirm there's no global state. If there is any, remove it.
-
-### 4.3 Benchmark Suite
-
-For a representative config (200 agents, 256×256 map, 30% obstacle density):
-
-- Measure `patika_tick()` average and worst-case wall time
-- Measure at 50, 100, 200 agents
-- Run 10,000 ticks, report ticks/sec
-
-This number belongs in the README. Integrators need to know if this fits in their server frame budget.
-
-### 4.4 Stress Test
-
-- All agents moving to random targets simultaneously
-- Dynamic obstacle changes mid-run (`CMD_SET_TILE_STATE` at high rate)
-- Verify zero crashes, zero event queue overflows, zero stuck agents on reachable goals
-
-**Deliverable:** Documented thread model, measured performance, no crashes under load.
+Fixing both is mechanical — inline the payloads, rename to `group` / `team`, drop the
+two dead cases — and then an optional `PATIKA_BUILD_TOOLS` target makes it buildable
+from a clean checkout. A recording of agents routing around obstacles is the one thing
+the README cannot say in prose.
 
 ---
 
-## Milestone Summary
+## Housekeeping
 
-| Phase | Deliverable | Complexity |
-|---|---|---|
-| 1 | Correct queues, inline payloads, patrol works | Low — targeted fixes |
-| 2 | A\* on rectangular grid, reservation-aware | Medium — algorithmic |
-| 3 | Clean public API, no stubs or dead code | Low — mechanical |
-| 4 | Thread model documented, benchmarked, stress tested | Low–Medium |
-
----
-
-## Explicit Non-Goals
-
-- Embedded / bare-metal support — not the target
-- Flow fields — add only if A\* is measured as a bottleneck at real agent counts
-- Network protocol / serialization — caller's problem
-- Navmesh — grid is the abstraction, it stays
-- Pathfinding-as-a-service / HTTP API — wrong layer
+- `CMakeLists.txt` says `project(patika_c VERSION 1.0.0)`; `version.h` says `0.3.0`.
+- `src/tests/test_stress_capacity.c:319` has an inline profanity comment.
+- The build never exports `compile_commands.json`, so clangd-based editors index
+  `src/` and `src/tests/` with no include paths and report phantom errors. One line:
+  `set(CMAKE_EXPORT_COMPILE_COMMANDS ON)`.
