@@ -21,10 +21,11 @@
 #define AGENT_GRID_RESERVED_BIT  0x80000000  // Bit 31
 #define AGENT_GRID_AGENT_MASK    0x0000FFFF  // Lower 16 bits
 
-#define PATIKA_INTERNAL_LOG_DEBUG(fmt, ...) PATIKA_LOG_DEBUG("[CORE] " fmt, ##__VA_ARGS__)
-#define PATIKA_INTERNAL_LOG_INFO(fmt, ...) PATIKA_LOG_INFO("[CORE] " fmt, ##__VA_ARGS__)
-#define PATIKA_INTERNAL_LOG_WARN(fmt, ...) PATIKA_LOG_WARN("[CORE] " fmt, ##__VA_ARGS__)
-#define PATIKA_INTERNAL_LOG_ERROR(fmt, ...) PATIKA_LOG_ERROR("[CORE] " fmt, ##__VA_ARGS__)
+/* "[CORE] " concatenates with the caller's format string literal. */
+#define PATIKA_INTERNAL_LOG_DEBUG(...) PATIKA_LOG_DEBUG("[CORE] " __VA_ARGS__)
+#define PATIKA_INTERNAL_LOG_INFO(...)  PATIKA_LOG_INFO("[CORE] " __VA_ARGS__)
+#define PATIKA_INTERNAL_LOG_WARN(...)  PATIKA_LOG_WARN("[CORE] " __VA_ARGS__)
+#define PATIKA_INTERNAL_LOG_ERROR(...) PATIKA_LOG_ERROR("[CORE] " __VA_ARGS__)
 
 /* -------------------------------------------------------------------------
  * Shared direction tables (used by pathfinding)

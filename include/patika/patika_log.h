@@ -92,21 +92,26 @@ PATIKA_LOG_API void patika_log_write(PatikaLogLevel level, const char *file,
  */
 PATIKA_LOG_API const char *patika_log_level_str(PatikaLogLevel level);
 
+/*
+ * These take (...) rather than (fmt, ...) so that a call with no variadic
+ * arguments stays portable C — no GNU comma-pasting extension, and nothing for
+ * -Wpedantic to complain about.  The first argument must be a string literal.
+ */
 #ifdef PATIKA_DEBUG
-#define PATIKA_LOG_DEBUG(fmt, ...)                                             \
-  patika_log_write(PATIKA_LOG_DEBUG, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
-#define PATIKA_LOG_INFO(fmt, ...)                                              \
-  patika_log_write(PATIKA_LOG_INFO, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define PATIKA_LOG_DEBUG(...)                                                  \
+  patika_log_write(PATIKA_LOG_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#define PATIKA_LOG_INFO(...)                                                   \
+  patika_log_write(PATIKA_LOG_INFO, __FILE__, __LINE__, __VA_ARGS__)
 #else
-#define PATIKA_LOG_DEBUG(fmt, ...) ((void)0)
-#define PATIKA_LOG_INFO(fmt, ...) ((void)0)
+#define PATIKA_LOG_DEBUG(...) ((void)0)
+#define PATIKA_LOG_INFO(...) ((void)0)
 #endif
 
-#define PATIKA_LOG_WARN(fmt, ...)                                              \
-  patika_log_write(PATIKA_LOG_WARN, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define PATIKA_LOG_WARN(...)                                                   \
+  patika_log_write(PATIKA_LOG_WARN, __FILE__, __LINE__, __VA_ARGS__)
 
-#define PATIKA_LOG_ERROR(fmt, ...)                                             \
-  patika_log_write(PATIKA_LOG_ERROR, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define PATIKA_LOG_ERROR(...)                                                  \
+  patika_log_write(PATIKA_LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 
 #ifdef __cplusplus
 }
