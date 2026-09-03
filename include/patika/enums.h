@@ -34,9 +34,6 @@ extern "C" {
 
         /* Map */
         CMD_SET_TILE_STATE         = 19,
-
-        /* Flow field */
-        CMD_SET_FLOW_FIELD         = 20,
     } CommandType;
 
     typedef enum
